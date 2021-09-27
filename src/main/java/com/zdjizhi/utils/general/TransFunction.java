@@ -6,7 +6,6 @@ import cn.hutool.log.Log;
 import cn.hutool.log.LogFactory;
 import com.jayway.jsonpath.InvalidPathException;
 import com.jayway.jsonpath.JsonPath;
-import com.zdjizhi.common.DefaultProConfig;
 import com.zdjizhi.common.FlowWriteConfig;
 import com.zdjizhi.utils.FormatUtils;
 import com.zdjizhi.utils.IpLookup;
@@ -34,12 +33,12 @@ class TransFunction {
      * IP定位库工具类
      */
     private static IpLookup ipLookup = new IpLookup.Builder(false)
-            .loadDataFileV4(FlowWriteConfig.IP_LIBRARY + "ip_v4.mmdb")
-            .loadDataFileV6(FlowWriteConfig.IP_LIBRARY + "ip_v6.mmdb")
-            .loadDataFilePrivateV4(FlowWriteConfig.IP_LIBRARY + "ip_private_v4.mmdb")
-            .loadDataFilePrivateV6(FlowWriteConfig.IP_LIBRARY + "ip_private_v6.mmdb")
-            .loadAsnDataFile(FlowWriteConfig.IP_LIBRARY + "asn_v4.mmdb")
-            .loadAsnDataFileV6(FlowWriteConfig.IP_LIBRARY + "asn_v6.mmdb")
+            .loadDataFileV4(FlowWriteConfig.TOOLS_LIBRARY + "ip_v4.mmdb")
+            .loadDataFileV6(FlowWriteConfig.TOOLS_LIBRARY + "ip_v6.mmdb")
+            .loadDataFilePrivateV4(FlowWriteConfig.TOOLS_LIBRARY + "ip_private_v4.mmdb")
+            .loadDataFilePrivateV6(FlowWriteConfig.TOOLS_LIBRARY + "ip_private_v6.mmdb")
+            .loadAsnDataFile(FlowWriteConfig.TOOLS_LIBRARY + "asn_v4.mmdb")
+            .loadAsnDataFileV6(FlowWriteConfig.TOOLS_LIBRARY + "asn_v6.mmdb")
             .build();
 
     /**
@@ -93,9 +92,9 @@ class TransFunction {
      */
     static String radiusMatch(String ip) {
         String account = HBaseUtils.getAccount(ip.trim());
-        if (StringUtil.isBlank(account)) {
-            logger.warn("HashMap get account is null, Ip is :" + ip);
-        }
+//        if (StringUtil.isBlank(account)) {
+//            logger.warn("HashMap get account is null, Ip is :" + ip);
+//        }
         return account;
     }
 

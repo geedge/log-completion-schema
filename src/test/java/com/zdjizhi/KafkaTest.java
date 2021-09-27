@@ -3,6 +3,7 @@ package com.zdjizhi;
 import cn.hutool.log.Log;
 import cn.hutool.log.LogFactory;
 import org.apache.kafka.clients.producer.*;
+import org.apache.kafka.common.config.SslConfigs;
 
 import java.util.Properties;
 
@@ -17,7 +18,7 @@ public class KafkaTest {
 
     public static void main(String[] args) {
         Properties properties = new Properties();
-        properties.put("bootstrap.servers", "192.168.44.33:9093,192.168.44.34:9093,192.168.44.35:9093");
+        properties.put("bootstrap.servers", "192.168.44.12:9091");
         properties.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
         properties.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
         properties.put("acks", "1");
@@ -30,12 +31,13 @@ public class KafkaTest {
 
         properties.put("security.protocol", "SSL");
 //        properties.put("ssl.keystore.location", "D:\\K18-Phase2\\tsgSpace\\dat\\kafka\\client.keystore.jks");
-        properties.put("ssl.keystore.location", "/usr/ca/client/client.keystore.jks");
-        properties.put("ssl.keystore.password", "ceiec2019");
+        properties.put("ssl.keystore.location", "D:\\K18-Phase2\\tsgSpace\\dat\\tsg\\keystore.jks");
+        properties.put("ssl.keystore.password", "galaxy2019");
 //        properties.put("ssl.truststore.location", "D:\\K18-Phase2\\tsgSpace\\dat\\kafka\\client.truststore.jks");
-        properties.put("ssl.truststore.location", "/usr/ca/trust/client.truststore.jks");
-        properties.put("ssl.truststore.password", "ceiec2019");
-        properties.put("ssl.key.password", "ceiec2019");
+        properties.put("ssl.truststore.location", "D:\\K18-Phase2\\tsgSpace\\dat\\tsg\\truststore.jks");
+        properties.put("ssl.truststore.password", "galaxy2019");
+        properties.put("ssl.key.password", "galaxy2019");
+        properties.put(SslConfigs.SSL_ENDPOINT_IDENTIFICATION_ALGORITHM_CONFIG, "");
 
         Producer<String, String> producer = new KafkaProducer<String, String>(properties);
 

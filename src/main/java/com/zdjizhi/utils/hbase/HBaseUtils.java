@@ -2,7 +2,6 @@ package com.zdjizhi.utils.hbase;
 
 import cn.hutool.log.Log;
 import cn.hutool.log.LogFactory;
-import com.zdjizhi.common.DefaultProConfig;
 import com.zdjizhi.common.FlowWriteConfig;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.Cell;
@@ -46,7 +45,7 @@ public class HBaseUtils {
      */
     private HBaseUtils() {
         zookeeperIp = FlowWriteConfig.HBASE_ZOOKEEPER_SERVERS;
-        hBaseTable = DefaultProConfig.HBASE_TABLE_NAME;
+        hBaseTable = FlowWriteConfig.HBASE_TABLE_NAME;
         //获取连接
         getConnection();
         //拉取所有

@@ -32,22 +32,28 @@ public class LogFlowWriteTopology {
 
         if (FlowWriteConfig.LOG_NEED_COMPLETE == 1) {
             //对原始日志进行处理补全转换等
-            DataStream<String> cleaningLog = streamSource.map(new MapCompletedFunction())
-                    .name("TransFormLogs").setParallelism(FlowWriteConfig.MAP_PARALLELISM);
+            DataStream<String> cleaningLog = streamSource.map(new MapCompletedFunction()).name("TransFormLogs")
+                    .setParallelism(FlowWriteConfig.TRANSFORM_PARALLELISM);
             //过滤空数据不发送到Kafka内
-            DataStream<String> result = cleaningLog.filter(new FilterNullFunction()).name("FilterAbnormalData");
+            DataStream<String> result = cleaningLog.filter(new FilterNullFunction()).name("FilterAbnormalData")
+                    .setParallelism(FlowWriteConfig.TRANSFORM_PARALLELISM);
             //发送数据到Kafka
             result.addSink(Producer.getKafkaProducer()).name("LogSinkKafka")
-                    .setParallelism(FlowWriteConfig.PRODUCER_PARALLELISM);
+                    .setParallelism(FlowWriteConfig.TRANSFORM_PARALLELISM);
         } else {
-            DataStream<String> result = streamSource.filter(new FilterNullFunction()).name("FilterOriginalData");
-            result.addSink(Producer.getKafkaProducer()).name("LogSinkKafka").setParallelism(FlowWriteConfig.PRODUCER_PARALLELISM);
+            //过滤空数据不发送到Kafka内
+            DataStream<String> result = streamSource.filter(new FilterNullFunction()).name("FilterOriginalData")
+                    .setParallelism(FlowWriteConfig.TRANSFORM_PARALLELISM);
+            //发送数据到Kafka
+            result.addSink(Producer.getKafkaProducer()).name("LogSinkKafka")
+                    .setParallelism(FlowWriteConfig.TRANSFORM_PARALLELISM);
         }
 
         try {
             environment.execute(args[0]);
         } catch (Exception e) {
             logger.error("This Flink task start ERROR! Exception information is :" + e);
+            e.printStackTrace();
         }
 
     }

@@ -30,12 +30,12 @@ public class SnowflakeId {
     /**
      * 机器id所占的位数
      */
-    private final long workerIdBits = 7L;
+    private final long workerIdBits = 8L;
 
     /**
      * 数据标识id所占的位数
      */
-    private final long dataCenterIdBits = 6L;
+    private final long dataCenterIdBits = 5L;
 
     /**
      * 支持的最大机器id，结果是63 (这个移位算法可以很快的计算出几位二进制数所能表示的最大十进制数)
@@ -74,12 +74,12 @@ public class SnowflakeId {
     private final long sequenceMask = -1L ^ (-1L << sequenceBits);
 
     /**
-     * 工作机器ID(0~127)
+     * 工作机器ID(0~255)
      */
     private long workerId;
 
     /**
-     * 数据中心ID(0~63)
+     * 数据中心ID(0~31)
      */
     private long dataCenterId;
 

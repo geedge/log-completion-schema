@@ -6,7 +6,7 @@
 
     <groupId>com.zdjizhi</groupId>
     <artifactId>log-completion-schema</artifactId>
-    <version>20210728</version>
+    <version>210908-security</version>
 
     <name>log-completion-schema</name>
     <url>http://www.example.com</url>
@@ -135,13 +135,13 @@
         </dependency>
 
         <!-- https://mvnrepository.com/artifact/org.apache.flink/flink-table -->
-        <dependency>
-            <groupId>org.apache.flink</groupId>
-            <artifactId>flink-table</artifactId>
-            <version>${flink.version}</version>
-            <type>pom</type>
-            <scope>${scope.type}</scope>
-        </dependency>
+        <!--<dependency>-->
+            <!--<groupId>org.apache.flink</groupId>-->
+            <!--<artifactId>flink-table</artifactId>-->
+            <!--<version>${flink.version}</version>-->
+            <!--<type>pom</type>-->
+            <!--<scope>${scope.type}</scope>-->
+        <!--</dependency>-->
 
         <!-- https://mvnrepository.com/artifact/org.apache.flink/flink-core -->
         <dependency>
@@ -155,23 +155,32 @@
         <!-- https://mvnrepository.com/artifact/org.apache.flink/flink-streaming-java -->
         <dependency>
             <groupId>org.apache.flink</groupId>
-            <artifactId>flink-streaming-java_2.11</artifactId>
+            <artifactId>flink-streaming-java_2.12</artifactId>
             <version>${flink.version}</version>
-            <!--<scope>${scope.type}</scope>-->
+            <scope>${scope.type}</scope>
         </dependency>
 
         <!-- https://mvnrepository.com/artifact/org.apache.flink/flink-clients -->
         <dependency>
             <groupId>org.apache.flink</groupId>
-            <artifactId>flink-clients_2.11</artifactId>
+            <artifactId>flink-clients_2.12</artifactId>
             <version>${flink.version}</version>
             <scope>${scope.type}</scope>
         </dependency>
 
+        <!--test-->
+        <!--<dependency>-->
+            <!--<groupId>org.apache.flink</groupId>-->
+            <!--<artifactId>flink-connector-hbase-2.2_2.12</artifactId>-->
+            <!--<version>${flink.version}</version>-->
+            <!--<scope>${scope.type}</scope>-->
+        <!--</dependency>-->
+        <!--test-->
+
         <!-- https://mvnrepository.com/artifact/org.apache.flink/flink-connector-kafka -->
         <dependency>
             <groupId>org.apache.flink</groupId>
-            <artifactId>flink-connector-kafka_2.11</artifactId>
+            <artifactId>flink-connector-kafka_2.12</artifactId>
             <version>${flink.version}</version>
             <!--<scope>${scope.type}</scope>-->
         </dependency>

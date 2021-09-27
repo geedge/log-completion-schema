@@ -19,6 +19,7 @@ import java.util.concurrent.CountDownLatch;
  */
 public class ZookeeperUtils implements Watcher {
     private static final Log logger = LogFactory.get();
+    private static final int ID_MAX = 255;
 
     private ZooKeeper zookeeper;
 
@@ -46,7 +47,7 @@ public class ZookeeperUtils implements Watcher {
             connectZookeeper(zookeeperIp);
             Stat stat = zookeeper.exists(path, true);
             workerId = Integer.parseInt(getNodeDate(path));
-            if (workerId > 63) {
+            if (workerId > ID_MAX) {
                 workerId = 0;
                 zookeeper.setData(path, "1".getBytes(), stat.getVersion());
             } else {
