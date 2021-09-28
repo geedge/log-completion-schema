@@ -38,7 +38,8 @@ public class TransFormTypeMap {
     public static String dealCommonMessage(String message) {
         try {
             if (StringUtil.isNotBlank(message)) {
-                Map<String, Object> jsonMap = (Map<String, Object>) JsonMapper.fromJsonString(message, Map.class);
+                Map<String, Object> map = (Map<String, Object>) JsonMapper.fromJsonString(message, Map.class);
+                Map<String, Object> jsonMap = JsonTypeUtils.typeTransform(map);
                 for (String[] strings : jobList) {
                     //用到的参数的值
                     Object logValue = JsonParseUtil.getValue(jsonMap, strings[0]);
@@ -52,7 +53,7 @@ public class TransFormTypeMap {
                     String param = strings[3];
                     functionSet(function, jsonMap, appendToKeyName, appendToKeyValue, logValue, param);
                 }
-                return JsonMapper.toJsonString(JsonTypeUtils.typeTransform(jsonMap));
+                return JsonMapper.toJsonString(jsonMap);
             } else {
                 return "";
             }
