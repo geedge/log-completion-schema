@@ -91,11 +91,7 @@ class TransFunction {
      * @return account
      */
     static String radiusMatch(String ip) {
-        String account = HBaseUtils.getAccount(ip.trim());
-//        if (StringUtil.isBlank(account)) {
-//            logger.warn("HashMap get account is null, Ip is :" + ip);
-//        }
-        return account;
+        return HBaseUtils.getAccount(ip.trim());
     }
 
     /**
@@ -164,9 +160,11 @@ class TransFunction {
         try {
             if (StringUtil.isNotBlank(expr)) {
                 ArrayList<String> read = JsonPath.parse(message).read(expr);
-                flattenResult = read.get(0);
+                if (read.size() >= 1) {
+                    flattenResult = read.get(0);
+                }
             }
-        } catch (ClassCastException | InvalidPathException e) {
+        } catch (ClassCastException | InvalidPathException | ArrayIndexOutOfBoundsException e) {
             logger.error("设备标签解析异常，[ " + expr + " ]解析表达式错误" + e);
         }
         return flattenResult;

@@ -6,7 +6,7 @@
 
     <groupId>com.zdjizhi</groupId>
     <artifactId>log-completion-schema</artifactId>
-    <version>210908-security</version>
+    <version>211105-flattenSpec</version>
 
     <name>log-completion-schema</name>
     <url>http://www.example.com</url>
