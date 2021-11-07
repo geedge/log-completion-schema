@@ -38,6 +38,7 @@ public class TransFormMap {
         try {
             if (StringUtil.isNotBlank(message)) {
                 Map<String, Object> jsonMap = (Map<String, Object>) JsonMapper.fromJsonString(message, Map.class);
+                JsonParseUtil.dropJsonField(jsonMap);
                 for (String[] strings : jobList) {
                     //用到的参数的值
                     Object logValue = JsonParseUtil.getValue(jsonMap, strings[0]);
@@ -122,11 +123,6 @@ public class TransFormMap {
                     JsonParseUtil.setValue(jsonMap, appendToKeyName, TransFunction.radiusMatch(logValue.toString()));
                 }
                 break;
-            case "app_match":
-                if (logValue != null && appendTo == null) {
-                    JsonParseUtil.setValue(jsonMap, appendToKeyName, TransFunction.appMatch(logValue.toString()));
-                }
-                break;
             case "decode_of_base64":
                 if (logValue != null) {
                     JsonParseUtil.setValue(jsonMap, appendToKeyName, TransFunction.decodeBase64(logValue.toString(), TransFunction.isJsonValue(jsonMap, param)));
@@ -135,6 +131,11 @@ public class TransFormMap {
             case "flattenSpec":
                 if (logValue != null && param != null) {
                     JsonParseUtil.setValue(jsonMap, appendToKeyName, TransFunction.flattenSpec(logValue.toString(), param));
+                }
+                break;
+            case "app_match":
+                if (logValue != null && appendTo == null) {
+                    JsonParseUtil.setValue(jsonMap, appendToKeyName, TransFunction.appMatch(logValue.toString()));
                 }
                 break;
             default:

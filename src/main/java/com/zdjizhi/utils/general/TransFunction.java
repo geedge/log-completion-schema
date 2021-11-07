@@ -218,11 +218,9 @@ class TransFunction {
                 Object resultA = isJsonValue(object, split[1]);
                 Object resultB = isJsonValue(object, split[2]);
                 if (direction instanceof Number) {
-//                    result = (Integer.parseInt(direction.toString()) == Integer.parseInt(norms[1])) ? resultA : resultB;
                     result = TypeUtils.castToIfFunction((Integer.parseInt(direction.toString()) == Integer.parseInt(norms[1])) ? resultA : resultB);
                 } else if (direction instanceof String) {
                     result = TypeUtils.castToIfFunction(direction.equals(norms[1]) ? resultA : resultB);
-//                    result = direction.equals(norms[1]) ? resultA : resultB;
                 }
             }
         } catch (RuntimeException e) {
@@ -249,9 +247,7 @@ class TransFunction {
                 Object resultB = isJsonValue(jsonMap, split[2]);
                 if (direction instanceof Number) {
                     result = (Integer.parseInt(direction.toString()) == Integer.parseInt(norms[1])) ? resultA : resultB;
-//                    result = TypeUtils.castToIfFunction((Integer.parseInt(direction.toString()) == Integer.parseInt(norms[1])) ? resultA : resultB);
                 } else if (direction instanceof String) {
-//                    result = TypeUtils.castToIfFunction(direction.equals(norms[1]) ? resultA : resultB);
                     result = direction.equals(norms[1]) ? resultA : resultB;
                 }
             }
@@ -261,36 +257,6 @@ class TransFunction {
         return result;
     }
 
-//    /**
-//     * IF函数实现，解析日志构建三目运算;包含判断是否为数字若为数字则转换为long类型返回结果。
-//     *
-//     * @param jsonMap 原始日志
-//     * @param ifParam 字段名/普通字符串
-//     * @return resultA or resultB or null
-//     */
-//    static Object condition(Map<String, Object> jsonMap, String ifParam) {
-//        try {
-//            String[] split = ifParam.split(FlowWriteConfig.FORMAT_SPLITTER);
-//            String[] norms = split[0].split(FlowWriteConfig.IF_CONDITION_SPLITTER);
-//            String direction = isJsonValue(jsonMap, norms[0]);
-//            if (StringUtil.isNotBlank(direction)) {
-//                if (split.length == FlowWriteConfig.IF_PARAM_LENGTH) {
-//                    String resultA = isJsonValue(jsonMap, split[1]);
-//                    String resultB = isJsonValue(jsonMap, split[2]);
-//                    String result = (Integer.parseInt(direction) == Integer.parseInt(norms[1])) ? resultA : resultB;
-//                    Matcher isNum = PATTERN.matcher(result);
-//                    if (isNum.matches()) {
-//                        return Long.parseLong(result);
-//                    } else {
-//                        return result;
-//                    }
-//                }
-//            }
-//        } catch (RuntimeException e) {
-//            logger.error("IF 函数执行异常,异常信息:" + e);
-//        }
-//        return null;
-//    }
 
     /**
      * 设置固定值函数 若为数字则转为long返回

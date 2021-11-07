@@ -1,5 +1,6 @@
 package com.zdjizhi.utils.kafka;
 
+import com.sun.tools.javac.comp.Flow;
 import com.zdjizhi.common.FlowWriteConfig;
 import org.apache.flink.api.common.serialization.SimpleStringSchema;
 import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumer;
@@ -18,11 +19,11 @@ import java.util.Properties;
 public class Consumer {
     private static Properties createConsumerConfig() {
         Properties properties = new Properties();
-        properties.put("bootstrap.servers", FlowWriteConfig.INPUT_KAFKA_SERVERS);
+        properties.put("bootstrap.servers", FlowWriteConfig.SOURCE_KAFKA_SERVERS);
         properties.put("group.id", FlowWriteConfig.GROUP_ID);
-        properties.put("session.timeout.ms", "60000");
-        properties.put("max.poll.records", "3000");
-        properties.put("max.partition.fetch.bytes", "31457280");
+        properties.put("session.timeout.ms", FlowWriteConfig.SESSION_TIMEOUT_MS);
+        properties.put("max.poll.records", FlowWriteConfig.MAX_POLL_RECORDS);
+        properties.put("max.partition.fetch.bytes", FlowWriteConfig.MAX_PARTITION_FETCH_BYTES);
         properties.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
         properties.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
 
@@ -32,7 +33,7 @@ public class Consumer {
     }
 
     public static FlinkKafkaConsumer<String> getKafkaConsumer() {
-        FlinkKafkaConsumer<String> kafkaConsumer = new FlinkKafkaConsumer<>(FlowWriteConfig.INPUT_KAFKA_TOPIC,
+        FlinkKafkaConsumer<String> kafkaConsumer = new FlinkKafkaConsumer<>(FlowWriteConfig.SOURCE_KAFKA_TOPIC,
                 new SimpleStringSchema(), createConsumerConfig());
 
         kafkaConsumer.setCommitOffsetsOnCheckpoints(false);

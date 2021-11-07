@@ -5,9 +5,10 @@ import cn.hutool.log.LogFactory;
 import com.zdjizhi.common.FlowWriteConfig;
 import com.zdjizhi.utils.functions.FilterNullFunction;
 import com.zdjizhi.utils.functions.MapCompletedFunction;
+import com.zdjizhi.utils.functions.ObjectCompletedFunction;
+import com.zdjizhi.utils.functions.TypeMapCompletedFunction;
 import com.zdjizhi.utils.kafka.Consumer;
 import com.zdjizhi.utils.kafka.Producer;
-import org.apache.flink.streaming.api.TimeCharacteristic;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.DataStreamSource;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
@@ -27,26 +28,49 @@ public class LogFlowWriteTopology {
         //开启Checkpoint，interval用于指定checkpoint的触发间隔(单位milliseconds)
 //        environment.enableCheckpointing(5000);
 
+        //
+        environment.setBufferTimeout(5000);
+
         DataStreamSource<String> streamSource = environment.addSource(Consumer.getKafkaConsumer())
-                .setParallelism(FlowWriteConfig.CONSUMER_PARALLELISM);
+                .setParallelism(FlowWriteConfig.SOURCE_PARALLELISM);
 
         if (FlowWriteConfig.LOG_NEED_COMPLETE == 1) {
-            //对原始日志进行处理补全转换等
-            DataStream<String> cleaningLog = streamSource.map(new MapCompletedFunction()).name("TransFormLogs")
-                    .setParallelism(FlowWriteConfig.TRANSFORM_PARALLELISM);
+            DataStream<String> cleaningLog;
+            switch (FlowWriteConfig.LOG_TRANSFORM_TYPE) {
+                case 0:
+                    //对原始日志进行处理补全转换等，不对日志字段类型做校验。
+                    cleaningLog = streamSource.map(new MapCompletedFunction()).name("MapCompletedFunction")
+                            .setParallelism(FlowWriteConfig.TRANSFORM_PARALLELISM);
+                    break;
+                case 1:
+                    //对原始日志进行处理补全转换等，强制要求日志字段类型与schema一致。
+                    cleaningLog = streamSource.map(new ObjectCompletedFunction()).name("ObjectCompletedFunction")
+                            .setParallelism(FlowWriteConfig.TRANSFORM_PARALLELISM);
+                    break;
+                case 2:
+                    //对原始日志进行处理补全转换等，对日志字段类型做若校验，可根据schema进行强转。
+                    cleaningLog = streamSource.map(new TypeMapCompletedFunction()).name("TypeMapCompletedFunction")
+                            .setParallelism(FlowWriteConfig.TRANSFORM_PARALLELISM);
+                    break;
+                default:
+                    //对原始日志进行处理补全转换等，不对日志字段类型做校验。
+                    cleaningLog = streamSource.map(new MapCompletedFunction()).name("MapCompletedFunction")
+                            .setParallelism(FlowWriteConfig.TRANSFORM_PARALLELISM);
+            }
+
             //过滤空数据不发送到Kafka内
             DataStream<String> result = cleaningLog.filter(new FilterNullFunction()).name("FilterAbnormalData")
                     .setParallelism(FlowWriteConfig.TRANSFORM_PARALLELISM);
             //发送数据到Kafka
             result.addSink(Producer.getKafkaProducer()).name("LogSinkKafka")
-                    .setParallelism(FlowWriteConfig.TRANSFORM_PARALLELISM);
+                    .setParallelism(FlowWriteConfig.SINK_PARALLELISM);
         } else {
             //过滤空数据不发送到Kafka内
             DataStream<String> result = streamSource.filter(new FilterNullFunction()).name("FilterOriginalData")
                     .setParallelism(FlowWriteConfig.TRANSFORM_PARALLELISM);
             //发送数据到Kafka
             result.addSink(Producer.getKafkaProducer()).name("LogSinkKafka")
-                    .setParallelism(FlowWriteConfig.TRANSFORM_PARALLELISM);
+                    .setParallelism(FlowWriteConfig.SINK_PARALLELISM);
         }
 
         try {

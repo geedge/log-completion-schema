@@ -21,13 +21,13 @@
         <repository>
             <id>maven-ali</id>
             <url>http://maven.aliyun.com/nexus/content/groups/public/</url>
-            <releases>
+            <!--<releases>-->
                 <!--<enabled>true</enabled>-->
-            </releases>
-            <snapshots>
+            <!--</releases>-->
+            <!--<snapshots>-->
                 <!--<enabled>true</enabled>-->
-                <checksumPolicy>fail</checksumPolicy>
-            </snapshots>
+                <!--<checksumPolicy>fail</checksumPolicy>-->
+            <!--</snapshots>-->
         </repository>
     </repositories>
 

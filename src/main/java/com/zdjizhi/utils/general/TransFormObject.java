@@ -131,11 +131,6 @@ public class TransFormObject {
                     JsonParseUtil.setValue(object, appendToKeyName, TransFunction.radiusMatch(name.toString()));
                 }
                 break;
-            case "app_match":
-                if (name != null && appendTo == null) {
-                    JsonParseUtil.setValue(object, appendToKeyName, TransFunction.appMatch(name.toString()));
-                }
-                break;
             case "decode_of_base64":
                 if (name != null) {
                     JsonParseUtil.setValue(object, appendToKeyName, TransFunction.decodeBase64(name.toString(), TransFunction.isJsonValue(object, param)));
@@ -144,6 +139,11 @@ public class TransFormObject {
             case "flattenSpec":
                 if (name != null && param != null) {
                     JsonParseUtil.setValue(object, appendToKeyName, TransFunction.flattenSpec(name.toString(), param));
+                }
+                break;
+            case "app_match":
+                if (name != null && appendTo == null) {
+                    JsonParseUtil.setValue(object, appendToKeyName, TransFunction.appMatch(name.toString()));
                 }
                 break;
             default:

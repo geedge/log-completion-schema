@@ -206,7 +206,7 @@ public class JsonParseUtil {
         return isKeepField;
     }
 
-    static void dropJsonField(Map<String, Object> jsonMap) {
+    public static void dropJsonField(Map<String, Object> jsonMap) {
         for (String field : dropList) {
             jsonMap.remove(field);
         }
