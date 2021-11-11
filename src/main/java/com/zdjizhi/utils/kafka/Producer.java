@@ -43,6 +43,7 @@ public class Producer {
 
         kafkaProducer.setLogFailuresOnly(false);
 
+
 //        kafkaProducer.setWriteTimestampToKafka(true);
 
         return kafkaProducer;

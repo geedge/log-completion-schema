@@ -62,11 +62,11 @@ public class TransFormObject {
                 }
                 return JsonMapper.toJsonString(object);
             } else {
-                return "";
+                return null;
             }
         } catch (RuntimeException e) {
             logger.error("解析补全日志信息过程异常,异常信息:" + e + "\n" + message);
-            return "";
+            return null;
         }
     }
 

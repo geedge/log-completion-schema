@@ -3,6 +3,8 @@ package com.zdjizhi.utils.general;
 
 import cn.hutool.log.Log;
 import cn.hutool.log.LogFactory;
+import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.serializer.SerializerFeature;
 import com.zdjizhi.common.FlowWriteConfig;
 import com.zdjizhi.utils.JsonMapper;
 import com.zdjizhi.utils.StringUtil;
@@ -11,6 +13,8 @@ import com.zdjizhi.utils.json.JsonTypeUtils;
 
 import java.util.ArrayList;
 import java.util.Map;
+
+import static com.alibaba.fastjson.serializer.SerializerFeature.WriteMapNullValue;
 
 
 /**
@@ -53,13 +57,19 @@ public class TransFormTypeMap {
                     String param = strings[3];
                     functionSet(function, jsonMap, appendToKeyName, appendToKeyValue, logValue, param);
                 }
-                return JsonMapper.toJsonString(jsonMap);
+//                return JsonMapper.toJsonString(jsonMap);
+
+                //fastjson test
+                return JSONObject.toJSONString(jsonMap,
+                        SerializerFeature.DisableCircularReferenceDetect
+                        ,SerializerFeature.WriteNullStringAsEmpty
+                        ,SerializerFeature.WriteNullNumberAsZero);
             } else {
-                return "";
+                return null;
             }
         } catch (RuntimeException e) {
             logger.error("解析补全日志信息过程异常,异常信息:" + e + "\n" + message);
-            return "";
+            return null;
         }
     }
 
