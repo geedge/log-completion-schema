@@ -106,6 +106,22 @@ public class JsonParseUtil {
     }
 
     /**
+     * 获取属性值的方法
+     *
+     * @param jsonMap  原始日志
+     * @param property key
+     * @return 属性的值
+     */
+    public static Object getValue(JSONObject jsonMap, String property) {
+        try {
+            return jsonMap.getOrDefault(property, null);
+        } catch (RuntimeException e) {
+            logger.error("获取json-value异常，异常key：" + property + "异常信息为：" + e);
+            return null;
+        }
+    }
+
+    /**
      * 更新属性值的方法
      *
      * @param jsonMap  原始日志json map
@@ -132,6 +148,21 @@ public class JsonParseUtil {
             BeanMap beanMap = BeanMap.create(obj);
             beanMap.put(property, value);
         } catch (ClassCastException e) {
+            logger.error("赋予实体类错误类型数据", e);
+        }
+    }
+
+    /**
+     * 更新属性值的方法
+     *
+     * @param jsonMap  原始日志json map
+     * @param property 更新的key
+     * @param value    更新的值
+     */
+    public static void setValue(JSONObject jsonMap, String property, Object value) {
+        try {
+            jsonMap.put(property, value);
+        } catch (RuntimeException e) {
             logger.error("赋予实体类错误类型数据", e);
         }
     }
@@ -206,7 +237,21 @@ public class JsonParseUtil {
         return isKeepField;
     }
 
+    /**
+     * 删除schema内指定的无效字段（jackson）
+     * @param jsonMap
+     */
     public static void dropJsonField(Map<String, Object> jsonMap) {
+        for (String field : dropList) {
+            jsonMap.remove(field);
+        }
+    }
+
+    /**
+     * 删除schema内指定的无效字段（fastjson）
+     * @param jsonMap
+     */
+    public static void dropJsonField(JSONObject jsonMap) {
         for (String field : dropList) {
             jsonMap.remove(field);
         }
