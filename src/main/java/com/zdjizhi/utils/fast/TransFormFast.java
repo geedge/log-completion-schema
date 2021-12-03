@@ -58,17 +58,15 @@ public class TransFormFast {
                     functionSet(function, jsonMap, appendToKeyName, appendToKeyValue, logValue, param);
                 }
 
-                return JSONObject.toJSONString(jsonMap,
-                        SerializerFeature.DisableCircularReferenceDetect
-                        , SerializerFeature.WriteNullStringAsEmpty
-                        , SerializerFeature.WriteNullNumberAsZero);
+                return FastJsonTypeUtils.typeTransform(jsonMap);
 
             } else {
-                return null;
+                return "";
             }
         } catch (RuntimeException e) {
-            logger.error("解析补全日志信息过程异常,异常信息:" + e + "\n" + message);
-            return null;
+            logger.error("Logs TransForm Exception! Error message is:" + e);
+            e.printStackTrace();
+            return "";
         }
     }
 
@@ -77,7 +75,7 @@ public class TransFormFast {
      * 根据schema描述对应字段进行操作的 函数集合
      *
      * @param function         匹配操作函数的字段
-     * @param jsonMap           原始日志解析map
+     * @param jsonMap          原始日志解析map
      * @param appendToKeyName  需要补全的字段的key
      * @param appendToKeyValue 需要补全的字段的值
      * @param logValue         用到的参数的值

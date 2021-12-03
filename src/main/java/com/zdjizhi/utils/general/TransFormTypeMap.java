@@ -57,13 +57,8 @@ public class TransFormTypeMap {
                     String param = strings[3];
                     functionSet(function, jsonMap, appendToKeyName, appendToKeyValue, logValue, param);
                 }
-//                return JsonMapper.toJsonString(jsonMap);
+                return JsonMapper.toJsonString(jsonMap);
 
-                //fastjson test
-                return JSONObject.toJSONString(jsonMap,
-                        SerializerFeature.DisableCircularReferenceDetect
-                        ,SerializerFeature.WriteNullStringAsEmpty
-                        ,SerializerFeature.WriteNullNumberAsZero);
             } else {
                 return null;
             }
