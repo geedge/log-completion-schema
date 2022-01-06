@@ -1,6 +1,5 @@
 package com.zdjizhi.utils.functions;
 
-import com.zdjizhi.utils.fast.TransFormFast;
 import com.zdjizhi.utils.general.TransFormTypeMap;
 import org.apache.flink.api.common.functions.MapFunction;
 
@@ -18,6 +17,5 @@ public class TypeMapCompletedFunction implements MapFunction<String, String> {
     public String map(String logs) {
 
         return TransFormTypeMap.dealCommonMessage(logs);
-//        return TransFormFast.dealCommonMessage(logs);
     }
 }
