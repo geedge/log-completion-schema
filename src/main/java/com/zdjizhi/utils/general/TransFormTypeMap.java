@@ -88,6 +88,8 @@ public class TransFormTypeMap {
                 break;
             case "snowflake_id":
                 JsonParseUtil.setValue(jsonMap, appendToKeyName, SnowflakeId.generateId());
+                //版本规划暂不实现TSG-22.01
+//                JsonParseUtil.setValue(jsonMap, appendToKeyName, TransFunction.getDecimalHash(SnowflakeId.generateId()));
                 break;
             case "geo_ip_detail":
                 if (logValue != null && appendToKeyValue == null) {

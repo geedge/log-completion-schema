@@ -1,20 +1,21 @@
 package com.zdjizhi.utils.general;
 
 import cn.hutool.core.codec.Base64;
-import cn.hutool.core.text.StrSpliter;
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.log.Log;
 import cn.hutool.log.LogFactory;
 import com.jayway.jsonpath.InvalidPathException;
 import com.jayway.jsonpath.JsonPath;
 import com.zdjizhi.common.FlowWriteConfig;
 import com.zdjizhi.utils.FormatUtils;
-import com.zdjizhi.utils.IpLookup;
+import com.zdjizhi.utils.IpLookupV2;
 import com.zdjizhi.utils.StringUtil;
 import com.zdjizhi.utils.app.AppUtils;
 import com.zdjizhi.utils.hbase.HBaseUtils;
 import com.zdjizhi.utils.json.JsonParseUtil;
 import com.zdjizhi.utils.json.TypeUtils;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -24,19 +25,21 @@ import java.util.regex.Pattern;
  * @author qidaijie
  */
 class TransFunction {
-
     private static final Log logger = LogFactory.get();
 
+    /**
+     * 校验数字正则
+     */
     private static final Pattern PATTERN = Pattern.compile("[0-9]*");
 
     /**
      * IP定位库工具类
      */
-    private static IpLookup ipLookup = new IpLookup.Builder(false)
-            .loadDataFileV4(FlowWriteConfig.TOOLS_LIBRARY + "ip_v4.mmdb")
-            .loadDataFileV6(FlowWriteConfig.TOOLS_LIBRARY + "ip_v6.mmdb")
-            .loadDataFilePrivateV4(FlowWriteConfig.TOOLS_LIBRARY + "ip_private_v4.mmdb")
-            .loadDataFilePrivateV6(FlowWriteConfig.TOOLS_LIBRARY + "ip_private_v6.mmdb")
+    private static IpLookupV2 ipLookup = new IpLookupV2.Builder(false)
+            .loadDataFileV4(FlowWriteConfig.TOOLS_LIBRARY + "ip_v4_built_in.mmdb")
+            .loadDataFileV6(FlowWriteConfig.TOOLS_LIBRARY + "ip_v6_built_in.mmdb")
+            .loadDataFilePrivateV4(FlowWriteConfig.TOOLS_LIBRARY + "ip_v4_user_defined.mmdb")
+            .loadDataFilePrivateV6(FlowWriteConfig.TOOLS_LIBRARY + "ip_v6_user_defined.mmdb")
             .loadAsnDataFile(FlowWriteConfig.TOOLS_LIBRARY + "asn_v4.mmdb")
             .loadAsnDataFileV6(FlowWriteConfig.TOOLS_LIBRARY + "asn_v6.mmdb")
             .build();
@@ -50,15 +53,28 @@ class TransFunction {
     }
 
     /**
+     * CityHash64算法
+     * 版本规划暂不实现-TSG22.01
+     *
+     * @param data 原始数据
+     * @return 散列结果
+     */
+    static BigInteger getDecimalHash(long data) {
+        byte[] dataBytes = String.valueOf(data).getBytes();
+        long hashValue = CityHash.CityHash64(dataBytes, 0, dataBytes.length);
+        String decimalValue = Long.toUnsignedString(hashValue, 10);
+        BigInteger result = new BigInteger(decimalValue);
+        return result;
+    }
+
+    /**
      * 根据clientIp获取location信息
      *
      * @param ip client IP
      * @return ip地址详细信息
      */
     static String getGeoIpDetail(String ip) {
-
         return ipLookup.cityLookupDetail(ip);
-
     }
 
     /**
@@ -68,7 +84,6 @@ class TransFunction {
      * @return ASN
      */
     static String getGeoAsn(String ip) {
-
         return ipLookup.asnLookup(ip);
     }
 
@@ -102,7 +117,7 @@ class TransFunction {
      */
     static String appMatch(String appIds) {
         try {
-            String appId = StrSpliter.split(appIds, FlowWriteConfig.FORMAT_SPLITTER, true, true).get(0);
+            String appId = StrUtil.split(appIds, FlowWriteConfig.FORMAT_SPLITTER, true, true).get(0);
             return AppUtils.getAppName(Integer.parseInt(appId));
         } catch (NumberFormatException | ClassCastException exception) {
             logger.error("APP ID列表分割转换异常，异常APP ID列表:" + appIds);

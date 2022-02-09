@@ -6,7 +6,7 @@
 
     <groupId>com.zdjizhi</groupId>
     <artifactId>log-completion-schema</artifactId>
-    <version>211206-radius</version>
+    <version>220209-ipLookup</version>
 
     <name>log-completion-schema</name>
     <url>http://www.example.com</url>
@@ -115,7 +115,7 @@
         <dependency>
             <groupId>com.zdjizhi</groupId>
             <artifactId>galaxy</artifactId>
-            <version>1.0.7</version>
+            <version>1.0.8</version>
             <exclusions>
                 <exclusion>
                     <artifactId>slf4j-log4j12</artifactId>
@@ -133,15 +133,6 @@
             <artifactId>fastjson</artifactId>
             <version>1.2.70</version>
         </dependency>
-
-        <!-- https://mvnrepository.com/artifact/org.apache.flink/flink-table -->
-        <!--<dependency>-->
-            <!--<groupId>org.apache.flink</groupId>-->
-            <!--<artifactId>flink-table</artifactId>-->
-            <!--<version>${flink.version}</version>-->
-            <!--<type>pom</type>-->
-            <!--<scope>${scope.type}</scope>-->
-        <!--</dependency>-->
 
         <!-- https://mvnrepository.com/artifact/org.apache.flink/flink-core -->
         <dependency>
@@ -167,15 +158,6 @@
             <version>${flink.version}</version>
             <scope>${scope.type}</scope>
         </dependency>
-
-        <!--test-->
-        <!--<dependency>-->
-            <!--<groupId>org.apache.flink</groupId>-->
-            <!--<artifactId>flink-connector-hbase-2.2_2.12</artifactId>-->
-            <!--<version>${flink.version}</version>-->
-            <!--<scope>${scope.type}</scope>-->
-        <!--</dependency>-->
-        <!--test-->
 
         <!-- https://mvnrepository.com/artifact/org.apache.flink/flink-connector-kafka -->
         <dependency>
@@ -295,7 +277,7 @@
         <dependency>
             <groupId>cn.hutool</groupId>
             <artifactId>hutool-all</artifactId>
-            <version>5.5.2</version>
+            <version>5.7.17</version>
         </dependency>
 
         <dependency>
