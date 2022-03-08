@@ -15,7 +15,7 @@ import java.util.Properties;
  * @Description:
  * @date 2021/6/814:04
  */
-public class Producer {
+public class KafkaProducer {
 
     private static Properties createProducerConfig() {
         Properties properties = new Properties();
@@ -29,7 +29,7 @@ public class Producer {
         properties.put("max.request.size", FlowWriteConfig.MAX_REQUEST_SIZE);
         properties.put("compression.type", FlowWriteConfig.PRODUCER_KAFKA_COMPRESSION_TYPE);
 
-        CertUtils.chooseCert(FlowWriteConfig.KAFKA_SINK_PROTOCOL, properties);
+        CertUtils.chooseCert(FlowWriteConfig.SINK_KAFKA_SERVERS, properties);
 
         return properties;
     }
@@ -42,7 +42,6 @@ public class Producer {
                 createProducerConfig(), Optional.empty());
 
         kafkaProducer.setLogFailuresOnly(false);
-
 
 //        kafkaProducer.setWriteTimestampToKafka(true);
 

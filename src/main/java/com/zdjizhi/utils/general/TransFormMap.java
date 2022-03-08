@@ -30,34 +30,29 @@ public class TransFormMap {
     /**
      * 解析日志，并补全
      *
-     * @param message kafka Topic原始日志
+     * @param jsonMap kafka Topic消费原始日志并解析
      * @return 补全后的日志
      */
     @SuppressWarnings("unchecked")
-    public static String dealCommonMessage(String message) {
+    public static String dealCommonMessage(Map<String, Object> jsonMap) {
         try {
-            if (StringUtil.isNotBlank(message)) {
-                Map<String, Object> jsonMap = (Map<String, Object>) JsonMapper.fromJsonString(message, Map.class);
-                JsonParseUtil.dropJsonField(jsonMap);
-                for (String[] strings : jobList) {
-                    //用到的参数的值
-                    Object logValue = JsonParseUtil.getValue(jsonMap, strings[0]);
-                    //需要补全的字段的key
-                    String appendToKeyName = strings[1];
-                    //需要补全的字段的值
-                    Object appendTo = JsonParseUtil.getValue(jsonMap, appendToKeyName);
-                    //匹配操作函数的字段
-                    String function = strings[2];
-                    //额外的参数的值
-                    String param = strings[3];
-                    functionSet(function, jsonMap, appendToKeyName, appendTo, logValue, param);
-                }
-                return JsonMapper.toJsonString(jsonMap);
-            } else {
-                return null;
+            JsonParseUtil.dropJsonField(jsonMap);
+            for (String[] strings : jobList) {
+                //用到的参数的值
+                Object logValue = JsonParseUtil.getValue(jsonMap, strings[0]);
+                //需要补全的字段的key
+                String appendToKeyName = strings[1];
+                //需要补全的字段的值
+                Object appendTo = JsonParseUtil.getValue(jsonMap, appendToKeyName);
+                //匹配操作函数的字段
+                String function = strings[2];
+                //额外的参数的值
+                String param = strings[3];
+                functionSet(function, jsonMap, appendToKeyName, appendTo, logValue, param);
             }
+            return JsonMapper.toJsonString(jsonMap);
         } catch (RuntimeException e) {
-            logger.error("解析补全日志信息过程异常,异常信息:" + e + "\n" + message);
+            logger.error("TransForm logs failed,The exception is :" + e.getMessage());
             return null;
         }
     }

@@ -52,8 +52,6 @@ public class FlowWriteConfig {
     public static final String PRODUCER_ACK = FlowWriteConfigurations.getStringProperty(0, "producer.ack");
     public static final String TOOLS_LIBRARY = FlowWriteConfigurations.getStringProperty(0, "tools.library");
     public static final String PRODUCER_KAFKA_COMPRESSION_TYPE = FlowWriteConfigurations.getStringProperty(0, "producer.kafka.compression.type");
-    public static final String KAFKA_SOURCE_PROTOCOL = FlowWriteConfigurations.getStringProperty(1, "kafka.source.protocol");
-    public static final String KAFKA_SINK_PROTOCOL = FlowWriteConfigurations.getStringProperty(1, "kafka.sink.protocol");
     public static final String KAFKA_USER = FlowWriteConfigurations.getStringProperty(1, "kafka.user");
     public static final String KAFKA_PIN = FlowWriteConfigurations.getStringProperty(1, "kafka.pin");
 
