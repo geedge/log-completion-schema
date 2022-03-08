@@ -59,6 +59,7 @@ class TransFunction {
      * @param data 原始数据
      * @return 散列结果
      */
+    @Deprecated
     static BigInteger getDecimalHash(long data) {
         byte[] dataBytes = String.valueOf(data).getBytes();
         long hashValue = CityHash.CityHash64(dataBytes, 0, dataBytes.length);
@@ -115,6 +116,7 @@ class TransFunction {
      * @param appIds app id 列表
      * @return appName
      */
+    @Deprecated
     static String appMatch(String appIds) {
         try {
             String appId = StrUtil.split(appIds, FlowWriteConfig.FORMAT_SPLITTER, true, true).get(0);

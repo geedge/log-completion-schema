@@ -125,11 +125,6 @@ public class TransFormTypeMap {
                     JsonParseUtil.setValue(jsonMap, appendToKeyName, TransFunction.radiusMatch(logValue.toString()));
                 }
                 break;
-            case "app_match":
-                if (logValue != null && appendToKeyValue == null) {
-                    JsonParseUtil.setValue(jsonMap, appendToKeyName, TransFunction.appMatch(logValue.toString()));
-                }
-                break;
             case "decode_of_base64":
                 if (logValue != null) {
                     JsonParseUtil.setValue(jsonMap, appendToKeyName, TransFunction.decodeBase64(logValue.toString(), TransFunction.isJsonValue(jsonMap, param)));
@@ -138,6 +133,11 @@ public class TransFormTypeMap {
             case "flattenSpec":
                 if (logValue != null && param != null) {
                     JsonParseUtil.setValue(jsonMap, appendToKeyName, TransFunction.flattenSpec(logValue.toString(), param));
+                }
+                break;
+            case "app_match":
+                if (logValue != null && appendToKeyValue == null) {
+                    JsonParseUtil.setValue(jsonMap, appendToKeyName, TransFunction.appMatch(logValue.toString()));
                 }
                 break;
             default:

@@ -9,6 +9,7 @@ package com.zdjizhi.utils.general;
  *
  * @author qidaijie
  */
+@Deprecated
 public class CityHash {
 
     private static final long k0 = 0xc3a5c85c97cb3127L;

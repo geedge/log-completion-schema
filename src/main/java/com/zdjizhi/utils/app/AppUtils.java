@@ -20,6 +20,7 @@ import java.util.concurrent.TimeUnit;
  * @author qidaijie
  */
 
+@Deprecated
 public class AppUtils {
     private static final Log logger = LogFactory.get();
     private static Map<Integer, String> appIdMap = new ConcurrentHashMap<>(128);
