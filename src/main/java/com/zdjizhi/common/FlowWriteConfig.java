@@ -2,11 +2,18 @@ package com.zdjizhi.common;
 
 
 import com.zdjizhi.utils.system.FlowWriteConfigurations;
+import org.jasypt.encryption.pbe.StandardPBEStringEncryptor;
 
 /**
  * @author Administrator
  */
 public class FlowWriteConfig {
+
+    private static StandardPBEStringEncryptor encryptor = new StandardPBEStringEncryptor();
+
+    static {
+        encryptor.setPassword("galaxy");
+    }
 
     public static final int IF_PARAM_LENGTH = 3;
     public static final String VISIBILITY = "disabled";
@@ -52,8 +59,9 @@ public class FlowWriteConfig {
     public static final String PRODUCER_ACK = FlowWriteConfigurations.getStringProperty(0, "producer.ack");
     public static final String TOOLS_LIBRARY = FlowWriteConfigurations.getStringProperty(0, "tools.library");
     public static final String PRODUCER_KAFKA_COMPRESSION_TYPE = FlowWriteConfigurations.getStringProperty(0, "producer.kafka.compression.type");
-    public static final String KAFKA_USER = FlowWriteConfigurations.getStringProperty(1, "kafka.user");
-    public static final String KAFKA_PIN = FlowWriteConfigurations.getStringProperty(1, "kafka.pin");
+    public static final String KAFKA_SASL_JAAS_USER = encryptor.decrypt(FlowWriteConfigurations.getStringProperty(1, "kafka.user"));
+    public static final String KAFKA_SASL_JAAS_PIN = encryptor.decrypt(FlowWriteConfigurations.getStringProperty(1, "kafka.pin"));
+
 
     /**
      * connection kafka
@@ -70,6 +78,5 @@ public class FlowWriteConfig {
      */
     public static final String SCHEMA_HTTP = FlowWriteConfigurations.getStringProperty(0, "schema.http");
     public static final String APP_ID_HTTP = FlowWriteConfigurations.getStringProperty(0, "app.id.http");
-
 
 }

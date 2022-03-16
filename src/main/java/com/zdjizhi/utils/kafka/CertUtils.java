@@ -33,15 +33,15 @@ class CertUtils {
             properties.put("security.protocol", "SASL_PLAINTEXT");
             properties.put("sasl.mechanism", "PLAIN");
             properties.put("sasl.jaas.config", "org.apache.kafka.common.security.plain.PlainLoginModule required username="
-                    + FlowWriteConfig.KAFKA_USER + " password=" + FlowWriteConfig.KAFKA_PIN + ";");
+                    + FlowWriteConfig.KAFKA_SASL_JAAS_USER + " password=" + FlowWriteConfig.KAFKA_SASL_JAAS_PIN + ";");
         } else if (servers.contains(SSL_PORT)) {
             properties.put("security.protocol", "SSL");
             properties.put(SslConfigs.SSL_ENDPOINT_IDENTIFICATION_ALGORITHM_CONFIG, "");
             properties.put("ssl.keystore.location", FlowWriteConfig.TOOLS_LIBRARY + "keystore.jks");
-            properties.put("ssl.keystore.password", FlowWriteConfig.KAFKA_PIN);
+            properties.put("ssl.keystore.password", FlowWriteConfig.KAFKA_SASL_JAAS_PIN);
             properties.put("ssl.truststore.location", FlowWriteConfig.TOOLS_LIBRARY + "truststore.jks");
-            properties.put("ssl.truststore.password", FlowWriteConfig.KAFKA_PIN);
-            properties.put("ssl.key.password", FlowWriteConfig.KAFKA_PIN);
+            properties.put("ssl.truststore.password", FlowWriteConfig.KAFKA_SASL_JAAS_PIN);
+            properties.put("ssl.key.password", FlowWriteConfig.KAFKA_SASL_JAAS_PIN);
         }
 
     }

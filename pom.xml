@@ -6,7 +6,7 @@
 
     <groupId>com.zdjizhi</groupId>
     <artifactId>log-completion-schema</artifactId>
-    <version>220308-IngestionTime</version>
+    <version>220316-encryption</version>
 
     <name>log-completion-schema</name>
     <url>http://www.example.com</url>
@@ -37,6 +37,7 @@
         <hadoop.version>2.7.1</hadoop.version>
         <kafka.version>1.0.0</kafka.version>
         <hbase.version>2.2.3</hbase.version>
+        <nacos.version>1.4.1</nacos.version>
         <scope.type>provided</scope.type>
         <!--<scope.type>compile</scope.type>-->
     </properties>
@@ -285,6 +286,20 @@
             <artifactId>junit</artifactId>
             <version>4.12</version>
             <scope>test</scope>
+        </dependency>
+
+        <!-- https://mvnrepository.com/artifact/com.alibaba.nacos/nacos-client -->
+        <dependency>
+            <groupId>com.alibaba.nacos</groupId>
+            <artifactId>nacos-client</artifactId>
+            <version>${nacos.version}</version>
+        </dependency>
+
+        <!-- https://mvnrepository.com/artifact/org.jasypt/jasypt -->
+        <dependency>
+            <groupId>org.jasypt</groupId>
+            <artifactId>jasypt</artifactId>
+            <version>1.9.3</version>
         </dependency>
 
     </dependencies>
