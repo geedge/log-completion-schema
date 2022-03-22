@@ -10,6 +10,7 @@ import com.zdjizhi.utils.kafka.KafkaConsumer;
 import com.zdjizhi.utils.kafka.KafkaProducer;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.DataStreamSource;
+import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 
 import java.util.Map;
@@ -30,8 +31,9 @@ public class LogFlowWriteTopology {
         environment.setBufferTimeout(FlowWriteConfig.BUFFER_TIMEOUT);
 
         if (FlowWriteConfig.LOG_NEED_COMPLETE == 1) {
-            DataStreamSource<Map<String, Object>> streamSource = environment.addSource(KafkaConsumer.myDeserializationConsumer())
-                    .setParallelism(FlowWriteConfig.SOURCE_PARALLELISM);
+
+            SingleOutputStreamOperator<Map<String, Object>> streamSource = environment.addSource(KafkaConsumer.myDeserializationConsumer())
+                    .setParallelism(FlowWriteConfig.SOURCE_PARALLELISM).name(FlowWriteConfig.SOURCE_KAFKA_TOPIC);
 
             DataStream<String> cleaningLog;
             switch (FlowWriteConfig.LOG_TRANSFORM_TYPE) {
@@ -56,7 +58,7 @@ public class LogFlowWriteTopology {
                     .setParallelism(FlowWriteConfig.TRANSFORM_PARALLELISM);
 
             //发送数据到Kafka
-            result.addSink(KafkaProducer.getKafkaProducer()).name("LogSinkKafka")
+            result.addSink(KafkaProducer.getKafkaProducer()).name(FlowWriteConfig.SINK_KAFKA_TOPIC)
                     .setParallelism(FlowWriteConfig.SINK_PARALLELISM);
         } else {
             DataStreamSource<String> streamSource = environment.addSource(KafkaConsumer.flinkConsumer())
@@ -67,7 +69,7 @@ public class LogFlowWriteTopology {
                     .setParallelism(FlowWriteConfig.TRANSFORM_PARALLELISM);
 
             //发送数据到Kafka
-            result.addSink(KafkaProducer.getKafkaProducer()).name("LogSinkKafka")
+            result.addSink(KafkaProducer.getKafkaProducer()).name(FlowWriteConfig.SINK_KAFKA_TOPIC)
                     .setParallelism(FlowWriteConfig.SINK_PARALLELISM);
         }
 

@@ -3,18 +3,10 @@ package com.zdjizhi.utils.general;
 
 import cn.hutool.log.Log;
 import cn.hutool.log.LogFactory;
-import com.alibaba.fastjson.JSONObject;
-import com.alibaba.fastjson.serializer.SerializerFeature;
-import com.zdjizhi.common.FlowWriteConfig;
 import com.zdjizhi.utils.JsonMapper;
-import com.zdjizhi.utils.StringUtil;
 import com.zdjizhi.utils.json.JsonParseUtil;
-import com.zdjizhi.utils.json.JsonTypeUtils;
 
-import java.util.ArrayList;
 import java.util.Map;
-
-import static com.alibaba.fastjson.serializer.SerializerFeature.WriteMapNullValue;
 
 
 /**
@@ -26,13 +18,6 @@ public class TransFormTypeMap {
     private static final Log logger = LogFactory.get();
 
     /**
-     * 获取任务列表
-     * list的每个元素是一个四元字符串数组 (有format标识的字段，补全的字段，用到的功能函数，用到的参数)，例如：
-     * (mail_subject mail_subject decode_of_base64 mail_subject_charset)
-     */
-    private static ArrayList<String[]> jobList = JsonParseUtil.getJobListFromHttp(FlowWriteConfig.SCHEMA_HTTP);
-
-    /**
      * 解析日志，并补全
      *
      * @param message kafka Topic原始日志
@@ -41,8 +26,8 @@ public class TransFormTypeMap {
     @SuppressWarnings("unchecked")
     public static String dealCommonMessage(Map<String, Object> message) {
         try {
-            Map<String, Object> jsonMap = JsonTypeUtils.typeTransform(message);
-            for (String[] strings : jobList) {
+            Map<String, Object> jsonMap = JsonParseUtil.typeTransform(message);
+            for (String[] strings : JsonParseUtil.getJobList()) {
                 //用到的参数的值
                 Object logValue = JsonParseUtil.getValue(jsonMap, strings[0]);
                 //需要补全的字段的key
@@ -57,7 +42,7 @@ public class TransFormTypeMap {
             }
             return JsonMapper.toJsonString(jsonMap);
         } catch (RuntimeException e) {
-            logger.error("TransForm logs failed,The exception is :" + e.getMessage());
+            logger.error("TransForm logs failed,The exception is :" + e);
             return null;
         }
     }
@@ -137,7 +122,7 @@ public class TransFormTypeMap {
                 break;
             case "app_match":
                 if (logValue != null && appendToKeyValue == null) {
-                    JsonParseUtil.setValue(jsonMap, appendToKeyName, TransFunction.appMatch(logValue.toString()));
+//                    JsonParseUtil.setValue(jsonMap, appendToKeyName, TransFunction.appMatch(logValue.toString()));
                 }
                 break;
             default:

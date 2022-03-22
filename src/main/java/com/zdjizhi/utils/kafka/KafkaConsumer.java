@@ -2,8 +2,12 @@ package com.zdjizhi.utils.kafka;
 
 import com.zdjizhi.common.FlowWriteConfig;
 import org.apache.flink.api.common.serialization.SimpleStringSchema;
+import org.apache.flink.api.common.serialization.TypeInformationSerializationSchema;
+import org.apache.flink.api.common.typeinfo.BasicTypeInfo;
+import org.apache.flink.api.common.typeutils.base.StringSerializer;
 import org.apache.flink.connector.kafka.source.KafkaSource;
 import org.apache.flink.connector.kafka.source.enumerator.initializer.OffsetsInitializer;
+import org.apache.flink.connector.kafka.source.reader.deserializer.KafkaRecordDeserializationSchema;
 import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumer;
 import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumerBase;
 
@@ -25,9 +29,7 @@ public class KafkaConsumer {
         properties.put("session.timeout.ms", FlowWriteConfig.SESSION_TIMEOUT_MS);
         properties.put("max.poll.records", FlowWriteConfig.MAX_POLL_RECORDS);
         properties.put("max.partition.fetch.bytes", FlowWriteConfig.MAX_PARTITION_FETCH_BYTES);
-        properties.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
-        properties.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
-        properties.setProperty(FlinkKafkaConsumerBase.KEY_PARTITION_DISCOVERY_INTERVAL_MILLIS, "10");
+        properties.put("partition.discovery.interval.ms", "10000");
         CertUtils.chooseCert(FlowWriteConfig.SOURCE_KAFKA_SERVERS, properties);
 
         return properties;
@@ -42,7 +44,10 @@ public class KafkaConsumer {
         FlinkKafkaConsumer<Map<String, Object>> kafkaConsumer = new FlinkKafkaConsumer<>(FlowWriteConfig.SOURCE_KAFKA_TOPIC,
                 new TimestampDeserializationSchema(), createConsumerConfig());
 
-        kafkaConsumer.setCommitOffsetsOnCheckpoints(false);
+        //随着checkpoint提交，将offset提交到kafka
+        kafkaConsumer.setCommitOffsetsOnCheckpoints(true);
+
+        //从消费组当前的offset开始消费
         kafkaConsumer.setStartFromGroupOffsets();
 
         return kafkaConsumer;
@@ -57,7 +62,7 @@ public class KafkaConsumer {
         FlinkKafkaConsumer<String> kafkaConsumer = new FlinkKafkaConsumer<>(FlowWriteConfig.SOURCE_KAFKA_TOPIC,
                 new SimpleStringSchema(), createConsumerConfig());
 
-        kafkaConsumer.setCommitOffsetsOnCheckpoints(false);
+        kafkaConsumer.setCommitOffsetsOnCheckpoints(true);
         kafkaConsumer.setStartFromGroupOffsets();
 
         return kafkaConsumer;

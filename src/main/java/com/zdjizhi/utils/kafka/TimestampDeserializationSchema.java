@@ -2,6 +2,7 @@ package com.zdjizhi.utils.kafka;
 
 import cn.hutool.log.Log;
 import cn.hutool.log.LogFactory;
+import com.zdjizhi.common.FlowWriteConfig;
 import com.zdjizhi.utils.JsonMapper;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.streaming.connectors.kafka.KafkaDeserializationSchema;
@@ -17,7 +18,11 @@ import java.util.Map;
  */
 public class TimestampDeserializationSchema implements KafkaDeserializationSchema {
     private static final Log logger = LogFactory.get();
-    private final String ENCODING = "UTF8";
+
+    @Override
+    public TypeInformation getProducedType() {
+        return TypeInformation.of(Map.class);
+    }
 
     @Override
     public boolean isEndOfStream(Object nextElement) {
@@ -25,11 +30,12 @@ public class TimestampDeserializationSchema implements KafkaDeserializationSchem
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public Map<String, Object> deserialize(ConsumerRecord record) throws Exception {
         if (record != null) {
             try {
                 long timestamp = record.timestamp() / 1000;
-                String value = new String((byte[]) record.value(), ENCODING);
+                String value = new String((byte[]) record.value(), FlowWriteConfig.ENCODING);
                 Map<String, Object> json = (Map<String, Object>) JsonMapper.fromJsonString(value, Map.class);
                 json.put("common_ingestion_time", timestamp);
                 return json;
@@ -38,10 +44,5 @@ public class TimestampDeserializationSchema implements KafkaDeserializationSchem
             }
         }
         return null;
-    }
-
-    @Override
-    public TypeInformation getProducedType() {
-        return TypeInformation.of(Map.class);
     }
 }

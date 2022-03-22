@@ -3,8 +3,6 @@ package com.zdjizhi.utils.kafka;
 import com.zdjizhi.common.FlowWriteConfig;
 import org.apache.flink.api.common.serialization.SimpleStringSchema;
 import org.apache.flink.streaming.connectors.kafka.FlinkKafkaProducer;
-import org.apache.kafka.clients.producer.ProducerConfig;
-import org.apache.kafka.common.config.SslConfigs;
 
 import java.util.Optional;
 import java.util.Properties;
@@ -39,12 +37,14 @@ public class KafkaProducer {
         FlinkKafkaProducer<String> kafkaProducer = new FlinkKafkaProducer<String>(
                 FlowWriteConfig.SINK_KAFKA_TOPIC,
                 new SimpleStringSchema(),
-                createProducerConfig(), Optional.empty());
+                //sink与所有分区建立连接，轮询写入；
+                createProducerConfig(),
+                Optional.empty());
 
-        kafkaProducer.setLogFailuresOnly(false);
-
-//        kafkaProducer.setWriteTimestampToKafka(true);
+        //允许producer记录失败日志而不是捕获和抛出它们
+        kafkaProducer.setLogFailuresOnly(true);
 
         return kafkaProducer;
     }
+
 }

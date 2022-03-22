@@ -5,14 +5,23 @@ import cn.hutool.log.LogFactory;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.alibaba.nacos.api.NacosFactory;
+import com.alibaba.nacos.api.PropertyKeyConst;
+import com.alibaba.nacos.api.config.ConfigService;
+import com.alibaba.nacos.api.config.listener.Listener;
+import com.alibaba.nacos.api.exception.NacosException;
 import com.jayway.jsonpath.JsonPath;
 import com.zdjizhi.common.FlowWriteConfig;
+import com.zdjizhi.common.NacosConfig;
 import com.zdjizhi.utils.StringUtil;
-import com.zdjizhi.utils.http.HttpClientUtil;
+import com.zdjizhi.utils.system.FlowWriteConfigurations;
 import net.sf.cglib.beans.BeanGenerator;
 import net.sf.cglib.beans.BeanMap;
 
 import java.util.*;
+import java.util.concurrent.Executor;
+
+import static com.zdjizhi.utils.json.JsonTypeUtils.*;
 
 /**
  * 使用FastJson解析json的工具类
@@ -20,10 +29,56 @@ import java.util.*;
  * @author qidaijie
  */
 public class JsonParseUtil {
-
     private static final Log logger = LogFactory.get();
+    private static Properties propNacos = new Properties();
 
+    /**
+     * 获取需要删除字段的列表
+     */
     private static ArrayList<String> dropList = new ArrayList<>();
+    /**
+     * 在内存中加载反射类用的map
+     */
+    private static HashMap<String, Class> map;
+    /**
+     * 获取任务列表
+     * list的每个元素是一个四元字符串数组 (有format标识的字段，补全的字段，用到的功能函数，用到的参数)，例如：
+     * (mail_subject mail_subject decode_of_base64 mail_subject_charset)
+     */
+    private static ArrayList<String[]> jobList;
+
+    static {
+        propNacos.setProperty(PropertyKeyConst.SERVER_ADDR, FlowWriteConfig.NACOS_SERVER);
+        propNacos.setProperty(PropertyKeyConst.NAMESPACE, FlowWriteConfig.NACOS_SCHEMA_NAMESPACE);
+        propNacos.setProperty(PropertyKeyConst.USERNAME, FlowWriteConfig.NACOS_USERNAME);
+        propNacos.setProperty(PropertyKeyConst.PASSWORD, FlowWriteConfig.NACOS_PIN);
+        try {
+            ConfigService configService = NacosFactory.createConfigService(propNacos);
+            String dataId = FlowWriteConfig.NACOS_DATA_ID;
+            String group = FlowWriteConfig.NACOS_GROUP;
+            String schema = configService.getConfig(dataId, group, 5000);
+            if (StringUtil.isNotBlank(schema)) {
+                jobList = getJobListFromHttp(schema);
+                map = getMapFromHttp(schema);
+            }
+            configService.addListener(dataId, group, new Listener() {
+                @Override
+                public Executor getExecutor() {
+                    return null;
+                }
+
+                @Override
+                public void receiveConfigInfo(String configMsg) {
+                    if (StringUtil.isNotBlank(configMsg)) {
+                        map = getMapFromHttp(configMsg);
+                        jobList = getJobListFromHttp(configMsg);
+                    }
+                }
+            });
+        } catch (NacosException e) {
+            logger.error("Get Schema config from Nacos error,The exception message is :" + e.getMessage());
+        }
+    }
 
     /**
      * 模式匹配，给定一个类型字符串返回一个类类型
@@ -106,22 +161,6 @@ public class JsonParseUtil {
     }
 
     /**
-     * 获取属性值的方法
-     *
-     * @param jsonMap  原始日志
-     * @param property key
-     * @return 属性的值
-     */
-    public static Object getValue(JSONObject jsonMap, String property) {
-        try {
-            return jsonMap.getOrDefault(property, null);
-        } catch (RuntimeException e) {
-            logger.error("获取json-value异常，异常key：" + property + "异常信息为：" + e);
-            return null;
-        }
-    }
-
-    /**
      * 更新属性值的方法
      *
      * @param jsonMap  原始日志json map
@@ -153,50 +192,60 @@ public class JsonParseUtil {
     }
 
     /**
-     * 更新属性值的方法
+     * 类型转换
      *
-     * @param jsonMap  原始日志json map
-     * @param property 更新的key
-     * @param value    更新的值
+     * @param jsonMap 原始日志map
      */
-    public static void setValue(JSONObject jsonMap, String property, Object value) {
-        try {
-            jsonMap.put(property, value);
-        } catch (RuntimeException e) {
-            logger.error("赋予实体类错误类型数据", e);
+    public static Map<String, Object> typeTransform(Map<String, Object> jsonMap) throws RuntimeException {
+        JsonParseUtil.dropJsonField(jsonMap);
+        HashMap<String, Object> tmpMap = new HashMap<>(192);
+        for (String key : jsonMap.keySet()) {
+            if (map.containsKey(key)) {
+                String simpleName = map.get(key).getSimpleName();
+                switch (simpleName) {
+                    case "String":
+                        tmpMap.put(key, checkString(jsonMap.get(key)));
+                        break;
+                    case "Integer":
+                        tmpMap.put(key, getIntValue(jsonMap.get(key)));
+                        break;
+                    case "long":
+                        tmpMap.put(key, checkLongValue(jsonMap.get(key)));
+                        break;
+                    case "List":
+                        tmpMap.put(key, checkArray(jsonMap.get(key)));
+                        break;
+                    case "Map":
+                        tmpMap.put(key, checkObject(jsonMap.get(key)));
+                        break;
+                    case "double":
+                        tmpMap.put(key, checkDouble(jsonMap.get(key)));
+                        break;
+                    default:
+                        tmpMap.put(key, checkString(jsonMap.get(key)));
+                }
+            }
         }
+        return tmpMap;
     }
 
-    /**
-     * 根据反射生成对象的方法
-     *
-     * @param properties 反射类用的map
-     * @return 生成的Object类型的对象
-     */
-    public static Object generateObject(Map properties) {
-        BeanGenerator generator = new BeanGenerator();
-        Set keySet = properties.keySet();
-        for (Object aKeySet : keySet) {
-            String key = (String) aKeySet;
-            generator.addProperty(key, (Class) properties.get(key));
-        }
-        return generator.create();
+    public static ArrayList<String[]> getJobList() {
+        return jobList;
     }
+
 
     /**
      * 通过获取String类型的网关schema链接来获取map，用于生成一个Object类型的对象
+     * <p>
+     * //     * @param http 网关schema地址
      *
-     * @param http 网关schema地址
      * @return 用于反射生成schema类型的对象的一个map集合
      */
-    public static HashMap<String, Class> getMapFromHttp(String http) {
+    public static HashMap<String, Class> getMapFromHttp(String schema) {
         HashMap<String, Class> map = new HashMap<>(16);
 
-        String schema = HttpClientUtil.requestByGetMethod(http);
-        Object data = JSON.parseObject(schema).get("data");
-
         //获取fields，并转化为数组，数组的每个元素都是一个name doc type
-        JSONObject schemaJson = JSON.parseObject(data.toString());
+        JSONObject schemaJson = JSON.parseObject(schema);
         JSONArray fields = (JSONArray) schemaJson.get("fields");
 
         for (Object field : fields) {
@@ -239,6 +288,7 @@ public class JsonParseUtil {
 
     /**
      * 删除schema内指定的无效字段（jackson）
+     *
      * @param jsonMap
      */
     public static void dropJsonField(Map<String, Object> jsonMap) {
@@ -248,30 +298,16 @@ public class JsonParseUtil {
     }
 
     /**
-     * 删除schema内指定的无效字段（fastjson）
-     * @param jsonMap
-     */
-    public static void dropJsonField(JSONObject jsonMap) {
-        for (String field : dropList) {
-            jsonMap.remove(field);
-        }
-    }
-
-    /**
      * 根据http链接获取schema，解析之后返回一个任务列表 (useList toList funcList paramlist)
      *
-     * @param http 网关url
+     * @param schema 网关url
      * @return 任务列表
      */
-    public static ArrayList<String[]> getJobListFromHttp(String http) {
+    public static ArrayList<String[]> getJobListFromHttp(String schema) {
         ArrayList<String[]> list = new ArrayList<>();
 
-        String schema = HttpClientUtil.requestByGetMethod(http);
-        //解析data
-        Object data = JSON.parseObject(schema).get("data");
-
         //获取fields，并转化为数组，数组的每个元素都是一个name doc type
-        JSONObject schemaJson = JSON.parseObject(data.toString());
+        JSONObject schemaJson = JSON.parseObject(schema);
         JSONArray fields = (JSONArray) schemaJson.get("fields");
 
         for (Object field : fields) {

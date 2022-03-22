@@ -1,8 +1,14 @@
 package com.zdjizhi.utils.system;
 
+import com.alibaba.nacos.api.NacosFactory;
+import com.alibaba.nacos.api.PropertyKeyConst;
+import com.alibaba.nacos.api.config.ConfigService;
+import com.alibaba.nacos.api.exception.NacosException;
+import com.zdjizhi.common.FlowWriteConfig;
 import com.zdjizhi.utils.StringUtil;
 
 import java.io.IOException;
+import java.io.StringReader;
 import java.util.Locale;
 import java.util.Properties;
 
@@ -25,7 +31,6 @@ public final class FlowWriteConfigurations {
         } else {
             return null;
         }
-
     }
 
     public static Integer getIntProperty(Integer type, String key) {

@@ -44,7 +44,7 @@ public class SnowflakeId {
     private final long maxWorkerId = -1L ^ (-1L << workerIdBits);
 
     /**
-     * 支持的最大数据标识id，结果是127
+     * 支持的最大数据标识id，结果是31
      */
     private final long maxDataCenterId = -1L ^ (-1L << dataCenterIdBits);
 
