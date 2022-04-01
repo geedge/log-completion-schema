@@ -38,6 +38,7 @@
         <kafka.version>1.0.0</kafka.version>
         <hbase.version>2.2.3</hbase.version>
         <nacos.version>1.2.0</nacos.version>
+        <zdjz.tools.version>1.0.8</zdjz.tools.version>
         <scope.type>provided</scope.type>
         <!--<scope.type>compile</scope.type>-->
     </properties>
@@ -116,7 +117,7 @@
         <dependency>
             <groupId>com.zdjizhi</groupId>
             <artifactId>galaxy</artifactId>
-            <version>1.0.8</version>
+            <version>${zdjz.tools.version}</version>
             <exclusions>
                 <exclusion>
                     <artifactId>slf4j-log4j12</artifactId>

@@ -9,16 +9,11 @@ import com.alibaba.nacos.api.config.ConfigService;
 import com.alibaba.nacos.api.config.listener.Listener;
 import com.alibaba.nacos.api.exception.NacosException;
 import com.zdjizhi.common.FlowWriteConfig;
-import com.zdjizhi.utils.JsonMapper;
 import com.zdjizhi.utils.StringUtil;
-import com.zdjizhi.utils.json.JsonParseUtil;
-import com.zdjizhi.utils.json.JsonTypeUtils;
+import org.junit.Test;
 
-import java.io.IOException;
-import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.Executor;
 
@@ -62,11 +57,17 @@ public class SchemaListener {
     }
 
 
-    @SuppressWarnings("unchecked")
-    public static void dealCommonMessage() {
-
-        System.out.println(Arrays.toString(jobList.get(0)));
-
+    @Test
+    public void dealCommonMessage() {
+        //keep running,change nacos config,print new config
+        while (true) {
+            try {
+                System.out.println(Arrays.toString(jobList.get(0)));
+                Thread.sleep(5000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     /**
@@ -74,11 +75,8 @@ public class SchemaListener {
      *
      * @return 任务列表
      */
-    public static ArrayList<String[]> getJobListFromHttp(String schema) {
+    private static ArrayList<String[]> getJobListFromHttp(String schema) {
         ArrayList<String[]> list = new ArrayList<>();
-
-        //解析data
-//        Object data = JSON.parseObject(schema).get("data");
 
         //获取fields，并转化为数组，数组的每个元素都是一个name doc type
         JSONObject schemaJson = JSON.parseObject(schema);

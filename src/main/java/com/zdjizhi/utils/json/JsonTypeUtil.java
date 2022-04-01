@@ -1,24 +1,11 @@
 package com.zdjizhi.utils.json;
 
-import cn.hutool.log.Log;
-import cn.hutool.log.LogFactory;
-import com.alibaba.nacos.api.NacosFactory;
-import com.alibaba.nacos.api.PropertyKeyConst;
-import com.alibaba.nacos.api.config.ConfigService;
-import com.alibaba.nacos.api.config.listener.Listener;
-import com.alibaba.nacos.api.exception.NacosException;
-import com.zdjizhi.common.FlowWriteConfig;
 import com.zdjizhi.utils.JsonMapper;
 import com.zdjizhi.utils.exception.FlowWriteException;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
-import java.util.concurrent.Executor;
 
-import static com.zdjizhi.utils.json.JsonParseUtil.getJobListFromHttp;
-import static com.zdjizhi.utils.json.JsonParseUtil.getMapFromHttp;
 
 /**
  * @author qidaijie
@@ -26,7 +13,7 @@ import static com.zdjizhi.utils.json.JsonParseUtil.getMapFromHttp;
  * @Description:
  * @date 2021/7/1217:34
  */
-public class JsonTypeUtils {
+public class JsonTypeUtil {
     /**
      * String 类型检验转换方法
      *

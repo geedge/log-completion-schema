@@ -19,6 +19,7 @@ import java.util.Properties;
  * @Description:
  * @date 2022/3/189:36
  */
+@Deprecated
 public class NacosConfig {
     private static final Log logger = LogFactory.get();
     private static Properties propCommon = new Properties();
@@ -48,7 +49,7 @@ public class NacosConfig {
             propNacos.setProperty(PropertyKeyConst.USERNAME, FlowWriteConfig.NACOS_USERNAME);
             propNacos.setProperty(PropertyKeyConst.PASSWORD, FlowWriteConfig.NACOS_PIN);
             ConfigService configService = NacosFactory.createConfigService(propNacos);
-            String commonConfig = configService.getConfig("topology_common_config.properties", FlowWriteConfig.NACOS_GROUP, 5000);
+            String commonConfig = configService.getConfig("etl_connection_config.properties", FlowWriteConfig.NACOS_GROUP, 5000);
             if (StringUtil.isNotBlank(commonConfig)) {
                 propCommon.load(new StringReader(commonConfig));
             }

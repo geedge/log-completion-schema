@@ -40,6 +40,7 @@ public class KafkaConsumer {
      *
      * @return kafka logs -> map
      */
+    @SuppressWarnings("unchecked")
     public static FlinkKafkaConsumer<Map<String, Object>> myDeserializationConsumer() {
         FlinkKafkaConsumer<Map<String, Object>> kafkaConsumer = new FlinkKafkaConsumer<>(FlowWriteConfig.SOURCE_KAFKA_TOPIC,
                 new TimestampDeserializationSchema(), createConsumerConfig());
@@ -62,7 +63,10 @@ public class KafkaConsumer {
         FlinkKafkaConsumer<String> kafkaConsumer = new FlinkKafkaConsumer<>(FlowWriteConfig.SOURCE_KAFKA_TOPIC,
                 new SimpleStringSchema(), createConsumerConfig());
 
+        //随着checkpoint提交，将offset提交到kafka
         kafkaConsumer.setCommitOffsetsOnCheckpoints(true);
+
+        //从消费组当前的offset开始消费
         kafkaConsumer.setStartFromGroupOffsets();
 
         return kafkaConsumer;

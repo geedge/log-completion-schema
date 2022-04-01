@@ -12,16 +12,12 @@ import com.alibaba.nacos.api.config.listener.Listener;
 import com.alibaba.nacos.api.exception.NacosException;
 import com.jayway.jsonpath.JsonPath;
 import com.zdjizhi.common.FlowWriteConfig;
-import com.zdjizhi.common.NacosConfig;
 import com.zdjizhi.utils.StringUtil;
-import com.zdjizhi.utils.system.FlowWriteConfigurations;
-import net.sf.cglib.beans.BeanGenerator;
 import net.sf.cglib.beans.BeanMap;
 
 import java.util.*;
 import java.util.concurrent.Executor;
 
-import static com.zdjizhi.utils.json.JsonTypeUtils.*;
 
 /**
  * 使用FastJson解析json的工具类
@@ -36,10 +32,12 @@ public class JsonParseUtil {
      * 获取需要删除字段的列表
      */
     private static ArrayList<String> dropList = new ArrayList<>();
+
     /**
      * 在内存中加载反射类用的map
      */
-    private static HashMap<String, Class> map;
+    private static HashMap<String, Class> jsonFieldsMap;
+
     /**
      * 获取任务列表
      * list的每个元素是一个四元字符串数组 (有format标识的字段，补全的字段，用到的功能函数，用到的参数)，例如：
@@ -58,8 +56,8 @@ public class JsonParseUtil {
             String group = FlowWriteConfig.NACOS_GROUP;
             String schema = configService.getConfig(dataId, group, 5000);
             if (StringUtil.isNotBlank(schema)) {
+                jsonFieldsMap = getMapFromHttp(schema);
                 jobList = getJobListFromHttp(schema);
-                map = getMapFromHttp(schema);
             }
             configService.addListener(dataId, group, new Listener() {
                 @Override
@@ -70,7 +68,8 @@ public class JsonParseUtil {
                 @Override
                 public void receiveConfigInfo(String configMsg) {
                     if (StringUtil.isNotBlank(configMsg)) {
-                        map = getMapFromHttp(configMsg);
+                        clearCache();
+                        jsonFieldsMap = getMapFromHttp(configMsg);
                         jobList = getJobListFromHttp(configMsg);
                     }
                 }
@@ -200,29 +199,29 @@ public class JsonParseUtil {
         JsonParseUtil.dropJsonField(jsonMap);
         HashMap<String, Object> tmpMap = new HashMap<>(192);
         for (String key : jsonMap.keySet()) {
-            if (map.containsKey(key)) {
-                String simpleName = map.get(key).getSimpleName();
+            if (jsonFieldsMap.containsKey(key)) {
+                String simpleName = jsonFieldsMap.get(key).getSimpleName();
                 switch (simpleName) {
                     case "String":
-                        tmpMap.put(key, checkString(jsonMap.get(key)));
+                        tmpMap.put(key, JsonTypeUtil.checkString(jsonMap.get(key)));
                         break;
                     case "Integer":
-                        tmpMap.put(key, getIntValue(jsonMap.get(key)));
+                        tmpMap.put(key, JsonTypeUtil.getIntValue(jsonMap.get(key)));
                         break;
                     case "long":
-                        tmpMap.put(key, checkLongValue(jsonMap.get(key)));
+                        tmpMap.put(key, JsonTypeUtil.checkLongValue(jsonMap.get(key)));
                         break;
                     case "List":
-                        tmpMap.put(key, checkArray(jsonMap.get(key)));
+                        tmpMap.put(key, JsonTypeUtil.checkArray(jsonMap.get(key)));
                         break;
                     case "Map":
-                        tmpMap.put(key, checkObject(jsonMap.get(key)));
+                        tmpMap.put(key, JsonTypeUtil.checkObject(jsonMap.get(key)));
                         break;
                     case "double":
-                        tmpMap.put(key, checkDouble(jsonMap.get(key)));
+                        tmpMap.put(key, JsonTypeUtil.checkDouble(jsonMap.get(key)));
                         break;
                     default:
-                        tmpMap.put(key, checkString(jsonMap.get(key)));
+                        tmpMap.put(key, JsonTypeUtil.checkString(jsonMap.get(key)));
                 }
             }
         }
@@ -241,7 +240,7 @@ public class JsonParseUtil {
      *
      * @return 用于反射生成schema类型的对象的一个map集合
      */
-    public static HashMap<String, Class> getMapFromHttp(String schema) {
+    private static HashMap<String, Class> getMapFromHttp(String schema) {
         HashMap<String, Class> map = new HashMap<>(16);
 
         //获取fields，并转化为数组，数组的每个元素都是一个name doc type
@@ -298,12 +297,12 @@ public class JsonParseUtil {
     }
 
     /**
-     * 根据http链接获取schema，解析之后返回一个任务列表 (useList toList funcList paramlist)
+     * 解析schema，解析之后返回一个任务列表 (useList toList funcList paramlist)
      *
-     * @param schema 网关url
+     * @param schema 日志schema
      * @return 任务列表
      */
-    public static ArrayList<String[]> getJobListFromHttp(String schema) {
+    private static ArrayList<String[]> getJobListFromHttp(String schema) {
         ArrayList<String[]> list = new ArrayList<>();
 
         //获取fields，并转化为数组，数组的每个元素都是一个name doc type
@@ -359,6 +358,15 @@ public class JsonParseUtil {
 
         }
         return list;
+    }
+
+    /**
+     * 在配置变动时，清空缓存重新获取
+     */
+    private static void clearCache() {
+        jobList.clear();
+        jsonFieldsMap.clear();
+        dropList.clear();
     }
 
 }

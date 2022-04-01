@@ -66,13 +66,11 @@ public class FlowWriteConfig {
     public static final Integer HBASE_TICK_TUPLE_FREQ_SECS = FlowWriteConfigurations.getIntProperty(0, "hbase.tick.tuple.freq.secs");
     public static final String HBASE_TABLE_NAME = FlowWriteConfigurations.getStringProperty(1, "hbase.table.name");
 
-
     /**
      * kafka common
      */
     public static final String KAFKA_SASL_JAAS_USER = encryptor.decrypt(FlowWriteConfigurations.getStringProperty(1, "kafka.user"));
     public static final String KAFKA_SASL_JAAS_PIN = encryptor.decrypt(FlowWriteConfigurations.getStringProperty(1, "kafka.pin"));
-
 
     /**
      * kafka source config
@@ -82,7 +80,6 @@ public class FlowWriteConfig {
     public static final String SESSION_TIMEOUT_MS = FlowWriteConfigurations.getStringProperty(1, "session.timeout.ms");
     public static final String MAX_POLL_RECORDS = FlowWriteConfigurations.getStringProperty(1, "max.poll.records");
     public static final String MAX_PARTITION_FETCH_BYTES = FlowWriteConfigurations.getStringProperty(1, "max.partition.fetch.bytes");
-
 
     /**
      * kafka sink config
@@ -110,11 +107,17 @@ public class FlowWriteConfig {
     /**
      * common config
      */
-    public static final String SOURCE_KAFKA_SERVERS = NacosConfig.getStringProperty("source.kafka.servers");
-    public static final String SINK_KAFKA_SERVERS = NacosConfig.getStringProperty("etl.sink.kafka.servers");
-    public static final String ZOOKEEPER_SERVERS = NacosConfig.getStringProperty("zookeeper.servers");
-    public static final String TOOLS_LIBRARY = NacosConfig.getStringProperty("tools.library");
-    public static final String HBASE_ZOOKEEPER_SERVERS = NacosConfig.getStringProperty("hbase.zookeeper.servers");
-
+    /**
+     * public static final String SOURCE_KAFKA_SERVERS = NacosConfig.getStringProperty("source.kafka.servers");
+     * public static final String SINK_KAFKA_SERVERS = NacosConfig.getStringProperty("sink.kafka.servers");
+     * public static final String ZOOKEEPER_SERVERS = NacosConfig.getStringProperty("zookeeper.servers");
+     * public static final String TOOLS_LIBRARY = NacosConfig.getStringProperty("tools.library");
+     * public static final String HBASE_ZOOKEEPER_SERVERS = NacosConfig.getStringProperty("hbase.zookeeper.servers");
+     */
+    public static final String SOURCE_KAFKA_SERVERS = FlowWriteConfigurations.getStringProperty(0,"source.kafka.servers");
+    public static final String SINK_KAFKA_SERVERS = FlowWriteConfigurations.getStringProperty(0,"sink.kafka.servers");
+    public static final String ZOOKEEPER_SERVERS = FlowWriteConfigurations.getStringProperty(0,"zookeeper.servers");
+    public static final String TOOLS_LIBRARY = FlowWriteConfigurations.getStringProperty(0,"tools.library");
+    public static final String HBASE_ZOOKEEPER_SERVERS = FlowWriteConfigurations.getStringProperty(0,"hbase.zookeeper.servers");
 
 }

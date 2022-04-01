@@ -5,8 +5,6 @@ import com.alibaba.nacos.api.PropertyKeyConst;
 import com.alibaba.nacos.api.config.ConfigService;
 import com.alibaba.nacos.api.config.listener.Listener;
 import com.alibaba.nacos.api.exception.NacosException;
-import com.zdjizhi.common.FlowWriteConfig;
-import com.zdjizhi.utils.system.FlowWriteConfigurations;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -22,10 +20,26 @@ import java.util.concurrent.Executor;
  * @date 2022/3/1016:58
  */
 public class NacosTest {
-    private static Properties properties = new Properties();
 
-    @Test
-    public void getProperties() {
+    /**
+     * <dependency>
+     * <groupId>com.alibaba.nacos</groupId>
+     * <artifactId>nacos-client</artifactId>
+     * <version>1.2.0</version>
+     * </dependency>
+     */
+
+    private static Properties properties = new Properties();
+    /**
+     * config data id = config name
+     */
+    private static final String DATA_ID = "test";
+    /**
+     * config group
+     */
+    private static final String GROUP = "Galaxy";
+
+    private void getProperties() {
         properties.setProperty(PropertyKeyConst.SERVER_ADDR, "192.168.44.12:8848");
         properties.setProperty(PropertyKeyConst.NAMESPACE, "flink");
         properties.setProperty(PropertyKeyConst.USERNAME, "nacos");
@@ -38,11 +52,10 @@ public class NacosTest {
         try {
             getProperties();
             ConfigService configService = NacosFactory.createConfigService(properties);
-            String content = configService.getConfig("topology_common_config.properties", "Galaxy", 5000);
+            String content = configService.getConfig(DATA_ID, GROUP, 5000);
             Properties nacosConfigMap = new Properties();
             nacosConfigMap.load(new StringReader(content));
             System.out.println(nacosConfigMap.getProperty("source.kafka.servers"));
-            System.out.println(nacosConfigMap.getProperty("schema.http"));
         } catch (NacosException | IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -53,16 +66,14 @@ public class NacosTest {
     @Test
     public void ListenerConfigurationTest() {
         getProperties();
-        ConfigService configService = null;
         try {
-            configService = NacosFactory.createConfigService(properties);
-            String content = configService.getConfig("ETL-SESSION-RECORD-COMPLETED", "etl", 5000);
+            //first get config
+            ConfigService configService = NacosFactory.createConfigService(properties);
+            String config = configService.getConfig(DATA_ID, GROUP, 5000);
+            System.out.println(config);
 
-            Properties nacosConfigMap = new Properties();
-            nacosConfigMap.load(new StringReader(content));
-            System.out.println(nacosConfigMap.getProperty("source.kafka.servers"));
-
-            configService.addListener("ETL-SESSION-RECORD-COMPLETED", "etl", new Listener() {
+            //start listenner
+            configService.addListener(DATA_ID, GROUP, new Listener() {
                 @Override
                 public Executor getExecutor() {
                     return null;
@@ -70,17 +81,20 @@ public class NacosTest {
 
                 @Override
                 public void receiveConfigInfo(String configMsg) {
-                    try {
-                        Properties nacosConfigMap = new Properties();
-                        nacosConfigMap.load(new StringReader(configMsg));
-                        System.out.println(nacosConfigMap.getProperty("source.kafka.servers"));
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
+                    System.out.println(configMsg);
                 }
             });
-        } catch (NacosException | IOException e) {
+        } catch (NacosException e) {
             e.printStackTrace();
+        }
+
+        //keep running,change nacos config,print new config
+        while (true) {
+            try {
+                Thread.sleep(5000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
     }
 }
