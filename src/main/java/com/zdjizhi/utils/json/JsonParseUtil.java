@@ -13,7 +13,6 @@ import com.alibaba.nacos.api.exception.NacosException;
 import com.jayway.jsonpath.JsonPath;
 import com.zdjizhi.common.FlowWriteConfig;
 import com.zdjizhi.utils.StringUtil;
-import net.sf.cglib.beans.BeanMap;
 
 import java.util.*;
 import java.util.concurrent.Executor;
@@ -56,7 +55,7 @@ public class JsonParseUtil {
             String group = FlowWriteConfig.NACOS_GROUP;
             String schema = configService.getConfig(dataId, group, 5000);
             if (StringUtil.isNotBlank(schema)) {
-                jsonFieldsMap = getMapFromHttp(schema);
+                jsonFieldsMap = getFieldsFromSchema(schema);
                 jobList = getJobListFromHttp(schema);
             }
             configService.addListener(dataId, group, new Listener() {
@@ -69,7 +68,7 @@ public class JsonParseUtil {
                 public void receiveConfigInfo(String configMsg) {
                     if (StringUtil.isNotBlank(configMsg)) {
                         clearCache();
-                        jsonFieldsMap = getMapFromHttp(configMsg);
+                        jsonFieldsMap = getFieldsFromSchema(configMsg);
                         jobList = getJobListFromHttp(configMsg);
                     }
                 }
@@ -129,23 +128,6 @@ public class JsonParseUtil {
     /**
      * 获取属性值的方法
      *
-     * @param obj      对象
-     * @param property key
-     * @return 属性的值
-     */
-    public static Object getValue(Object obj, String property) {
-        try {
-            BeanMap beanMap = BeanMap.create(obj);
-            return beanMap.get(property);
-        } catch (RuntimeException e) {
-            logger.error("获取json-value异常，异常key：" + property + "异常信息为：" + e);
-            return null;
-        }
-    }
-
-    /**
-     * 获取属性值的方法
-     *
      * @param jsonMap  原始日志
      * @param property key
      * @return 属性的值
@@ -170,22 +152,6 @@ public class JsonParseUtil {
         try {
             jsonMap.put(property, value);
         } catch (RuntimeException e) {
-            logger.error("赋予实体类错误类型数据", e);
-        }
-    }
-
-    /**
-     * 更新属性值的方法
-     *
-     * @param obj      对象
-     * @param property 更新的key
-     * @param value    更新的值
-     */
-    public static void setValue(Object obj, String property, Object value) {
-        try {
-            BeanMap beanMap = BeanMap.create(obj);
-            beanMap.put(property, value);
-        } catch (ClassCastException e) {
             logger.error("赋予实体类错误类型数据", e);
         }
     }
@@ -240,7 +206,7 @@ public class JsonParseUtil {
      *
      * @return 用于反射生成schema类型的对象的一个map集合
      */
-    private static HashMap<String, Class> getMapFromHttp(String schema) {
+    private static HashMap<String, Class> getFieldsFromSchema(String schema) {
         HashMap<String, Class> map = new HashMap<>(16);
 
         //获取fields，并转化为数组，数组的每个元素都是一个name doc type

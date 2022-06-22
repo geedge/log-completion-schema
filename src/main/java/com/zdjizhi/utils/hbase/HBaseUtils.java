@@ -45,6 +45,7 @@ public class HBaseUtils {
         getAll();
         //定时更新
         updateCache();
+
     }
 
     private static void getConnection() {
@@ -188,14 +189,21 @@ public class HBaseUtils {
      * @return account
      */
     public static String getAccount(String clientIp) {
-
-        if (hBaseUtils == null) {
-            getInstance();
+        if (FlowWriteConfig.HBASE_TICK_TUPLE_FREQ_SECS != 0) {
+            if (hBaseUtils == null) {
+                getInstance();
+            }
+            return subIdMap.get(clientIp);
         }
-        return subIdMap.get(clientIp);
-
+        return "";
     }
 
+    /**
+     * 获取当前用户上下线状态信息
+     *
+     * @param result HBase内获取的数据
+     * @return 状态 1-上线 2-下线
+     */
     private static int getAcctStatusType(Result result) {
         boolean hasType = result.containsColumn(Bytes.toBytes("radius"), Bytes.toBytes("acct_status_type"));
         if (hasType) {

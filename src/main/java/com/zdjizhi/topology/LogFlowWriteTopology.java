@@ -27,8 +27,6 @@ public class LogFlowWriteTopology {
     public static void main(String[] args) {
         final StreamExecutionEnvironment environment = StreamExecutionEnvironment.getExecutionEnvironment();
 
-        environment.enableCheckpointing(180 * 1000);
-
         //两个输出之间的最大时间 (单位milliseconds)
         environment.setBufferTimeout(FlowWriteConfig.BUFFER_TIMEOUT);
 

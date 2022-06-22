@@ -25,8 +25,8 @@ public class EncryptorTest {
         System.out.println(encPin);
         System.out.println(encUser);
         // 再进行解密：raw_password
-        String rawPwd = encryptor.decrypt("6MleDyA3Z73HSaXiKsDJ2k7Ys8YWLhEJ");
-        String rawUser = encryptor.decrypt("nsyGpHKGFA4KW0zro9MDdw==");
+        String rawPwd = encryptor.decrypt("ENC(6MleDyA3Z73HSaXiKsDJ2k7Ys8YWLhEJ)");
+        String rawUser = encryptor.decrypt("ENC(nnasyGpHKGFA4KW0zro9MDdw==)");
 
         System.out.println("The username is: "+rawPwd);
         System.out.println("The pin is: "+rawUser);

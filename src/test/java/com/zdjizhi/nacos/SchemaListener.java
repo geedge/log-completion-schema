@@ -30,8 +30,8 @@ public class SchemaListener {
 
 
     static {
-        properties.setProperty(PropertyKeyConst.SERVER_ADDR, "192.168.44.12:8848");
-        properties.setProperty(PropertyKeyConst.NAMESPACE, "flink");
+        properties.setProperty(PropertyKeyConst.SERVER_ADDR, "192.168.40.43:8848");
+        properties.setProperty(PropertyKeyConst.NAMESPACE, "test");
         properties.setProperty(PropertyKeyConst.USERNAME, "nacos");
         properties.setProperty(PropertyKeyConst.PASSWORD, "nacos");
 

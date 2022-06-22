@@ -17,10 +17,10 @@ import java.util.Calendar;
 public class FunctionTest {
 
     private static IpLookupV2 ipLookup = new IpLookupV2.Builder(false)
-            .loadDataFileV4(FlowWriteConfig.TOOLS_LIBRARY + "ip_v4_built_in.mmdb")
-            .loadDataFileV6(FlowWriteConfig.TOOLS_LIBRARY + "ip_v6_built_in.mmdb")
-            .loadDataFilePrivateV4(FlowWriteConfig.TOOLS_LIBRARY + "ip_v4_user_defined.mmdb")
-            .loadDataFilePrivateV6(FlowWriteConfig.TOOLS_LIBRARY + "ip_v6_user_defined.mmdb")
+            .loadDataFileV4(FlowWriteConfig.TOOLS_LIBRARY + "ip_v4.mmdb")
+//            .loadDataFileV6(FlowWriteConfig.TOOLS_LIBRARY + "ip_v6_built_in.mmdb")
+//            .loadDataFilePrivateV4(FlowWriteConfig.TOOLS_LIBRARY + "ip_v4_user_defined.mmdb")
+//            .loadDataFilePrivateV6(FlowWriteConfig.TOOLS_LIBRARY + "ip_v6_user_defined.mmdb")
             .loadAsnDataFile(FlowWriteConfig.TOOLS_LIBRARY + "asn_v4.mmdb")
             .loadAsnDataFileV6(FlowWriteConfig.TOOLS_LIBRARY + "asn_v6.mmdb")
             .build();
@@ -37,7 +37,7 @@ public class FunctionTest {
 
     @Test
     public void ipLookupTest() {
-        String ip = "61.144.36.144";
+        String ip = "0.255.255.254";
         System.out.println(ipLookup.cityLookupDetail(ip));
         System.out.println(ipLookup.countryLookup(ip));
     }

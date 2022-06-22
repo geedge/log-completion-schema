@@ -107,13 +107,6 @@ public class FlowWriteConfig {
     /**
      * common config
      */
-    /**
-     * public static final String SOURCE_KAFKA_SERVERS = NacosConfig.getStringProperty("source.kafka.servers");
-     * public static final String SINK_KAFKA_SERVERS = NacosConfig.getStringProperty("sink.kafka.servers");
-     * public static final String ZOOKEEPER_SERVERS = NacosConfig.getStringProperty("zookeeper.servers");
-     * public static final String TOOLS_LIBRARY = NacosConfig.getStringProperty("tools.library");
-     * public static final String HBASE_ZOOKEEPER_SERVERS = NacosConfig.getStringProperty("hbase.zookeeper.servers");
-     */
     public static final String SOURCE_KAFKA_SERVERS = FlowWriteConfigurations.getStringProperty(0,"source.kafka.servers");
     public static final String SINK_KAFKA_SERVERS = FlowWriteConfigurations.getStringProperty(0,"sink.kafka.servers");
     public static final String ZOOKEEPER_SERVERS = FlowWriteConfigurations.getStringProperty(0,"zookeeper.servers");

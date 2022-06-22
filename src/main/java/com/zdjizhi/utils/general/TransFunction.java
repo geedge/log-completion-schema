@@ -64,8 +64,7 @@ class TransFunction {
         byte[] dataBytes = String.valueOf(data).getBytes();
         long hashValue = CityHash.CityHash64(dataBytes, 0, dataBytes.length);
         String decimalValue = Long.toUnsignedString(hashValue, 10);
-        BigInteger result = new BigInteger(decimalValue);
-        return result;
+        return new BigInteger(decimalValue);
     }
 
     /**
@@ -75,7 +74,15 @@ class TransFunction {
      * @return ip地址详细信息
      */
     static String getGeoIpDetail(String ip) {
-        return ipLookup.cityLookupDetail(ip);
+        try {
+            return ipLookup.cityLookupDetail(ip);
+        } catch (NullPointerException npe) {
+            logger.error("The MMDB file is not loaded or IP is null! " + npe);
+            return "";
+        } catch (RuntimeException e) {
+            logger.error("Get clientIP location error! " + e);
+            return "";
+        }
     }
 
     /**
@@ -85,7 +92,15 @@ class TransFunction {
      * @return ASN
      */
     static String getGeoAsn(String ip) {
-        return ipLookup.asnLookup(ip);
+        try {
+            return ipLookup.asnLookup(ip);
+        } catch (NullPointerException npe) {
+            logger.error("The MMDB file is not loaded or IP is null! " + npe);
+            return "";
+        } catch (RuntimeException e) {
+            logger.error("Get IP ASN error! " + e);
+            return "";
+        }
     }
 
     /**
@@ -95,8 +110,15 @@ class TransFunction {
      * @return 国家
      */
     static String getGeoIpCountry(String ip) {
-
-        return ipLookup.countryLookup(ip);
+        try {
+            return ipLookup.countryLookup(ip);
+        } catch (NullPointerException npe) {
+            logger.error("The MMDB file is not loaded or IP is null! " + npe);
+            return "";
+        } catch (RuntimeException e) {
+            logger.error("Get ServerIP location error! " + e);
+            return "";
+        }
     }
 
 
@@ -137,7 +159,7 @@ class TransFunction {
         try {
             return FormatUtils.getTopPrivateDomain(domain);
         } catch (StringIndexOutOfBoundsException outException) {
-            logger.error("解析顶级域名异常,异常域名:" + domain);
+            logger.error("Parse top-level domain exceptions, exception domain names:" + domain);
             return "";
         }
     }
@@ -159,8 +181,8 @@ class TransFunction {
                     result = Base64.decodeStr(message, charset.toString());
                 }
             }
-        } catch (RuntimeException rune) {
-            logger.error("解析 Base64 异常,异常信息:" + rune);
+        } catch (RuntimeException e) {
+            logger.error("Resolve Base64 exception, exception information:" + e);
         }
         return result;
     }
@@ -182,25 +204,9 @@ class TransFunction {
                 }
             }
         } catch (ClassCastException | InvalidPathException | ArrayIndexOutOfBoundsException e) {
-            logger.error("设备标签解析异常，[ " + expr + " ]解析表达式错误" + e);
+            logger.error("The device label resolution exception or [expr] analytic expression error" + e);
         }
         return flattenResult;
-    }
-
-
-    /**
-     * 判断是否为日志字段,是则返回对应value，否则返回原始字符串
-     *
-     * @param object 内存实体类
-     * @param param  字段名/普通字符串
-     * @return JSON.Value or String
-     */
-    static Object isJsonValue(Object object, String param) {
-        if (param.contains(FlowWriteConfig.IS_JSON_KEY_TAG)) {
-            return JsonParseUtil.getValue(object, param.substring(2));
-        } else {
-            return param;
-        }
     }
 
     /**
@@ -216,34 +222,6 @@ class TransFunction {
         } else {
             return param;
         }
-    }
-
-    /**
-     * IF函数实现，解析日志构建三目运算;包含判断是否为数字若为数字则转换为long类型返回结果。
-     *
-     * @param object  内存实体类
-     * @param ifParam 字段名/普通字符串
-     * @return resultA or resultB or null
-     */
-    static Object condition(Object object, String ifParam) {
-        Object result = null;
-        try {
-            String[] split = ifParam.split(FlowWriteConfig.FORMAT_SPLITTER);
-            if (split.length == FlowWriteConfig.IF_PARAM_LENGTH) {
-                String[] norms = split[0].split(FlowWriteConfig.IF_CONDITION_SPLITTER);
-                Object direction = isJsonValue(object, norms[0]);
-                Object resultA = isJsonValue(object, split[1]);
-                Object resultB = isJsonValue(object, split[2]);
-                if (direction instanceof Number) {
-                    result = TypeUtils.castToIfFunction((Integer.parseInt(direction.toString()) == Integer.parseInt(norms[1])) ? resultA : resultB);
-                } else if (direction instanceof String) {
-                    result = TypeUtils.castToIfFunction(direction.equals(norms[1]) ? resultA : resultB);
-                }
-            }
-        } catch (RuntimeException e) {
-            logger.error("IF 函数执行异常,异常信息:" + e);
-        }
-        return result;
     }
 
     /**
@@ -272,26 +250,5 @@ class TransFunction {
             logger.error("IF 函数执行异常,异常信息:" + e);
         }
         return result;
-    }
-
-
-    /**
-     * 设置固定值函数 若为数字则转为long返回
-     *
-     * @param param 默认值
-     * @return 返回数字或字符串
-     */
-    static Object setValue(String param) {
-        try {
-            Matcher isNum = PATTERN.matcher(param);
-            if (isNum.matches()) {
-                return Long.parseLong(param);
-            } else {
-                return param;
-            }
-        } catch (RuntimeException e) {
-            logger.error("SetValue 函数异常，异常信息：" + e);
-        }
-        return null;
     }
 }

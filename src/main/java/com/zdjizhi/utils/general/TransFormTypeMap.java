@@ -122,7 +122,7 @@ public class TransFormTypeMap {
                 break;
             case "app_match":
                 if (logValue != null && appendToKeyValue == null) {
-//                    JsonParseUtil.setValue(jsonMap, appendToKeyName, TransFunction.appMatch(logValue.toString()));
+                    JsonParseUtil.setValue(jsonMap, appendToKeyName, TransFunction.appMatch(logValue.toString()));
                 }
                 break;
             default:

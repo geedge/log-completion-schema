@@ -33,15 +33,15 @@ public class NacosTest {
     /**
      * config data id = config name
      */
-    private static final String DATA_ID = "test";
+    private static final String DATA_ID = "dos_detection.properties";
     /**
      * config group
      */
     private static final String GROUP = "Galaxy";
 
     private void getProperties() {
-        properties.setProperty(PropertyKeyConst.SERVER_ADDR, "192.168.44.12:8848");
-        properties.setProperty(PropertyKeyConst.NAMESPACE, "flink");
+        properties.setProperty(PropertyKeyConst.SERVER_ADDR, "192.168.44.67:8848");
+        properties.setProperty(PropertyKeyConst.NAMESPACE, "f507879a-8b1b-4330-913e-83d4fcdc14bb");
         properties.setProperty(PropertyKeyConst.USERNAME, "nacos");
         properties.setProperty(PropertyKeyConst.PASSWORD, "nacos");
     }
@@ -56,6 +56,7 @@ public class NacosTest {
             Properties nacosConfigMap = new Properties();
             nacosConfigMap.load(new StringReader(content));
             System.out.println(nacosConfigMap.getProperty("source.kafka.servers"));
+            System.out.println(content);
         } catch (NacosException | IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
