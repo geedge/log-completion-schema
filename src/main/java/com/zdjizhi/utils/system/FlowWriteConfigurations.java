@@ -19,15 +19,15 @@ import java.util.Properties;
 
 public final class FlowWriteConfigurations {
 
-    private static Properties propKafka = new Properties();
+    private static Properties propDefault = new Properties();
     private static Properties propService = new Properties();
 
 
     public static String getStringProperty(Integer type, String key) {
         if (type == 0) {
-            return propService.getProperty(key);
+            return propService.getProperty(key).trim();
         } else if (type == 1) {
-            return propKafka.getProperty(key);
+            return propDefault.getProperty(key).trim();
         } else {
             return null;
         }
@@ -35,9 +35,9 @@ public final class FlowWriteConfigurations {
 
     public static Integer getIntProperty(Integer type, String key) {
         if (type == 0) {
-            return Integer.parseInt(propService.getProperty(key));
+            return Integer.parseInt(propService.getProperty(key).trim());
         } else if (type == 1) {
-            return Integer.parseInt(propKafka.getProperty(key));
+            return Integer.parseInt(propDefault.getProperty(key).trim());
         } else {
             return null;
         }
@@ -45,9 +45,9 @@ public final class FlowWriteConfigurations {
 
     public static Long getLongProperty(Integer type, String key) {
         if (type == 0) {
-            return Long.parseLong(propService.getProperty(key));
+            return Long.parseLong(propService.getProperty(key).trim());
         } else if (type == 1) {
-            return Long.parseLong(propKafka.getProperty(key));
+            return Long.parseLong(propDefault.getProperty(key).trim());
         } else {
             return null;
         }
@@ -57,7 +57,7 @@ public final class FlowWriteConfigurations {
         if (type == 0) {
             return StringUtil.equals(propService.getProperty(key).toLowerCase().trim().toUpperCase(Locale.ENGLISH), "true");
         } else if (type == 1) {
-            return StringUtil.equals(propKafka.getProperty(key).toLowerCase().trim().toUpperCase(Locale.ENGLISH), "true");
+            return StringUtil.equals(propDefault.getProperty(key).toLowerCase().trim().toUpperCase(Locale.ENGLISH), "true");
         } else {
             return null;
         }
@@ -66,9 +66,9 @@ public final class FlowWriteConfigurations {
     static {
         try {
             propService.load(FlowWriteConfigurations.class.getClassLoader().getResourceAsStream("service_flow_config.properties"));
-            propKafka.load(FlowWriteConfigurations.class.getClassLoader().getResourceAsStream("default_config.properties"));
+            propDefault.load(FlowWriteConfigurations.class.getClassLoader().getResourceAsStream("default_config.properties"));
         } catch (IOException | RuntimeException e) {
-            propKafka = null;
+            propDefault = null;
             propService = null;
         }
     }

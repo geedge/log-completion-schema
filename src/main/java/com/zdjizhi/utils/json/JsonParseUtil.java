@@ -1,10 +1,9 @@
 package com.zdjizhi.utils.json;
 
+import cn.hutool.json.JSONArray;
+import cn.hutool.json.JSONObject;
 import cn.hutool.log.Log;
 import cn.hutool.log.LogFactory;
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
 import com.alibaba.nacos.api.NacosFactory;
 import com.alibaba.nacos.api.PropertyKeyConst;
 import com.alibaba.nacos.api.config.ConfigService;
@@ -210,8 +209,8 @@ public class JsonParseUtil {
         HashMap<String, Class> map = new HashMap<>(16);
 
         //获取fields，并转化为数组，数组的每个元素都是一个name doc type
-        JSONObject schemaJson = JSON.parseObject(schema);
-        JSONArray fields = (JSONArray) schemaJson.get("fields");
+        JSONObject schemaJson = new JSONObject(schema, false, true);
+        JSONArray fields = schemaJson.getJSONArray("fields");
 
         for (Object field : fields) {
             String filedStr = field.toString();
@@ -238,8 +237,9 @@ public class JsonParseUtil {
      */
     private static boolean checkKeepField(String message) {
         boolean isKeepField = true;
-        boolean isHiveDoc = JSON.parseObject(message).containsKey("doc");
-        if (isHiveDoc) {
+        JSONObject fieldJson = new JSONObject(message, false, true);
+        boolean hasDoc = fieldJson.containsKey("doc");
+        if (hasDoc) {
             boolean isHiveVi = JsonPath.read(message, "$.doc").toString().contains("visibility");
             if (isHiveVi) {
                 String visibility = JsonPath.read(message, "$.doc.visibility").toString();
@@ -271,58 +271,40 @@ public class JsonParseUtil {
     private static ArrayList<String[]> getJobListFromHttp(String schema) {
         ArrayList<String[]> list = new ArrayList<>();
 
-        //获取fields，并转化为数组，数组的每个元素都是一个name doc type
-        JSONObject schemaJson = JSON.parseObject(schema);
-        JSONArray fields = (JSONArray) schemaJson.get("fields");
-
+        JSONObject schemaJson = new JSONObject(schema, false, true);
+        JSONArray fields = schemaJson.getJSONArray("fields");
         for (Object field : fields) {
+            JSONObject fieldJson = new JSONObject(field, false, true);
+            boolean hasDoc = fieldJson.containsKey("doc");
+            if (hasDoc) {
+                JSONObject docJson = fieldJson.getJSONObject("doc");
+                boolean hasFormat = docJson.containsKey("format");
+                if (hasFormat) {
+                    String name = fieldJson.getStr("name");
+                    JSONArray formatList = docJson.getJSONArray("format");
+                    for (Object format : formatList) {
+                        JSONObject formatJson = new JSONObject(format, false, true);
+                        String function = formatJson.getStr("function");
+                        String appendTo;
+                        String params = null;
 
-            if (JSON.parseObject(field.toString()).containsKey("doc")) {
-                Object doc = JSON.parseObject(field.toString()).get("doc");
-
-                if (JSON.parseObject(doc.toString()).containsKey("format")) {
-                    String name = JSON.parseObject(field.toString()).get("name").toString();
-                    Object format = JSON.parseObject(doc.toString()).get("format");
-                    JSONObject formatObject = JSON.parseObject(format.toString());
-
-                    String functions = formatObject.get("functions").toString();
-                    String appendTo = null;
-                    String params = null;
-
-                    if (formatObject.containsKey("appendTo")) {
-                        appendTo = formatObject.get("appendTo").toString();
-                    }
-
-                    if (formatObject.containsKey("param")) {
-                        params = formatObject.get("param").toString();
-                    }
-
-
-                    if (StringUtil.isNotBlank(appendTo) && StringUtil.isBlank(params)) {
-                        String[] functionArray = functions.split(FlowWriteConfig.FORMAT_SPLITTER);
-                        String[] appendToArray = appendTo.split(FlowWriteConfig.FORMAT_SPLITTER);
-
-                        for (int i = 0; i < functionArray.length; i++) {
-                            list.add(new String[]{name, appendToArray[i], functionArray[i], null});
+                        if (formatJson.containsKey("appendTo")) {
+                            appendTo = formatJson.getStr("appendTo");
+                        } else {
+                            appendTo = name;
                         }
 
-                    } else if (StringUtil.isNotBlank(appendTo) && StringUtil.isNotBlank(params)) {
-                        String[] functionArray = functions.split(FlowWriteConfig.FORMAT_SPLITTER);
-                        String[] appendToArray = appendTo.split(FlowWriteConfig.FORMAT_SPLITTER);
-                        String[] paramArray = params.split(FlowWriteConfig.FORMAT_SPLITTER);
-
-                        for (int i = 0; i < functionArray.length; i++) {
-                            list.add(new String[]{name, appendToArray[i], functionArray[i], paramArray[i]});
-
+                        if (formatJson.containsKey("param")) {
+                            params = formatJson.getStr("param");
                         }
-                    } else {
-                        list.add(new String[]{name, name, functions, params});
-                    }
 
+                        list.add(new String[]{name, appendTo, function, params});
+
+                    }
                 }
             }
-
         }
+
         return list;
     }
 

@@ -1,7 +1,7 @@
 package com.zdjizhi.utils.general;
 
 import cn.hutool.core.codec.Base64;
-import cn.hutool.core.util.StrUtil;
+import cn.hutool.json.JSONObject;
 import cn.hutool.log.Log;
 import cn.hutool.log.LogFactory;
 import com.jayway.jsonpath.InvalidPathException;
@@ -10,15 +10,12 @@ import com.zdjizhi.common.FlowWriteConfig;
 import com.zdjizhi.utils.FormatUtils;
 import com.zdjizhi.utils.IpLookupV2;
 import com.zdjizhi.utils.StringUtil;
-import com.zdjizhi.utils.app.AppUtils;
 import com.zdjizhi.utils.hbase.HBaseUtils;
 import com.zdjizhi.utils.json.JsonParseUtil;
-import com.zdjizhi.utils.json.TypeUtils;
+import com.zdjizhi.utils.json.JsonPathUtil;
 
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Map;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -53,36 +50,21 @@ class TransFunction {
     }
 
     /**
-     * CityHash64算法
-     * 版本规划暂不实现-TSG22.01
-     *
-     * @param data 原始数据
-     * @return 散列结果
-     */
-    @Deprecated
-    static BigInteger getDecimalHash(long data) {
-        byte[] dataBytes = String.valueOf(data).getBytes();
-        long hashValue = CityHash.CityHash64(dataBytes, 0, dataBytes.length);
-        String decimalValue = Long.toUnsignedString(hashValue, 10);
-        return new BigInteger(decimalValue);
-    }
-
-    /**
      * 根据clientIp获取location信息
      *
      * @param ip client IP
      * @return ip地址详细信息
      */
     static String getGeoIpDetail(String ip) {
+        String detail = "";
         try {
-            return ipLookup.cityLookupDetail(ip);
+            detail = ipLookup.cityLookupDetail(ip);
         } catch (NullPointerException npe) {
             logger.error("The MMDB file is not loaded or IP is null! " + npe);
-            return "";
         } catch (RuntimeException e) {
             logger.error("Get clientIP location error! " + e);
-            return "";
         }
+        return detail;
     }
 
     /**
@@ -92,15 +74,15 @@ class TransFunction {
      * @return ASN
      */
     static String getGeoAsn(String ip) {
+        String asn = "";
         try {
-            return ipLookup.asnLookup(ip);
+            asn = ipLookup.asnLookup(ip);
         } catch (NullPointerException npe) {
             logger.error("The MMDB file is not loaded or IP is null! " + npe);
-            return "";
         } catch (RuntimeException e) {
             logger.error("Get IP ASN error! " + e);
-            return "";
         }
+        return asn;
     }
 
     /**
@@ -110,15 +92,15 @@ class TransFunction {
      * @return 国家
      */
     static String getGeoIpCountry(String ip) {
+        String country = "";
         try {
-            return ipLookup.countryLookup(ip);
+            country = ipLookup.countryLookup(ip);
         } catch (NullPointerException npe) {
             logger.error("The MMDB file is not loaded or IP is null! " + npe);
-            return "";
         } catch (RuntimeException e) {
             logger.error("Get ServerIP location error! " + e);
-            return "";
         }
+        return country;
     }
 
 
@@ -133,19 +115,39 @@ class TransFunction {
     }
 
     /**
-     * appId与缓存中对应关系补全appName
+     * 借助HBase补齐GTP-C信息
      *
-     * @param appIds app id 列表
-     * @return appName
+     * @param jsonMap     原始日志json
+     * @param logValue    上行TEID
+     * @param appendToKey 结果值映射到的日志字段key
+     * @param param       用于解析jsonarray，直接定位到GTP信息所在的位置
      */
-    @Deprecated
-    static String appMatch(String appIds) {
+    static void gtpcMatch(Map<String, Object> jsonMap, String logValue, String appendToKey, String param) {
         try {
-            String appId = StrUtil.split(appIds, FlowWriteConfig.FORMAT_SPLITTER, true, true).get(0);
-            return AppUtils.getAppName(Integer.parseInt(appId));
-        } catch (NumberFormatException | ClassCastException exception) {
-            logger.error("APP ID列表分割转换异常，异常APP ID列表:" + appIds);
-            return "";
+            Long teid = null;
+            String[] exprs = param.split(FlowWriteConfig.FORMAT_SPLITTER);
+            for (String expr : exprs) {
+                Long value = JsonPathUtil.getLongValue(logValue, expr);
+                if (value != null) {
+                    teid = value;
+                    break;
+                }
+            }
+
+            if (teid != null) {
+                String[] appendToKeys = appendToKey.split(FlowWriteConfig.FORMAT_SPLITTER);
+                String userData = HBaseUtils.getGtpData(teid);
+                if (userData != null) {
+                    JSONObject schemaJson = new JSONObject(userData, false, true);
+                    for (String key : appendToKeys) {
+                        JsonParseUtil.setValue(jsonMap, key, schemaJson.getObj(key));
+                    }
+                } else {
+                    logger.warn("Description The user whose TEID is " + teid + " was not matched!");
+                }
+            }
+        } catch (RuntimeException re) {
+            logger.error("An exception occurred in teid type conversion or parsing of user information!" + re);
         }
     }
 
