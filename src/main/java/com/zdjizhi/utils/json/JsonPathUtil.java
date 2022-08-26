@@ -29,9 +29,9 @@ public class JsonPathUtil {
         String result = null;
         try {
             if (StringUtil.isNotBlank(message) && StringUtil.isNotBlank(expr)) {
-                ArrayList<String> read = JsonPath.parse(message).read(expr);
+                ArrayList<Object> read = JsonPath.parse(message).read(expr);
                 if (read.size() >= 1) {
-                    result = read.get(0);
+                    result = read.get(0).toString();
                 }
             }
         } catch (RuntimeException e) {
@@ -53,9 +53,9 @@ public class JsonPathUtil {
         Integer result = null;
         try {
             if (StringUtil.isNotBlank(message) && StringUtil.isNotBlank(expr)) {
-                ArrayList<Integer> read = JsonPath.parse(message).read(expr);
+                ArrayList<Object> read = JsonPath.parse(message).read(expr);
                 if (read.size() >= 1) {
-                    result = read.get(0);
+                    result = Integer.parseInt(read.get(0).toString());
                 }
             }
         } catch (RuntimeException e) {
@@ -76,14 +76,13 @@ public class JsonPathUtil {
         Long result = null;
         try {
             if (StringUtil.isNotBlank(message) && StringUtil.isNotBlank(expr)) {
-                System.out.println(message);
-                ArrayList<Long> read = JsonPath.parse(message).read(expr);
+                ArrayList<Object> read = JsonPath.parse(message).read(expr);
                 if (read.size() >= 1) {
-                    result = read.get(0);
+                    result = Long.parseLong(read.get(0).toString());
                 }
             }
         } catch (RuntimeException e) {
-            logger.error("JSONPath parsing json returns Long data exception" + e);
+            logger.error("JSONPath parsing json returns Long data exception: " + e);
         }
 
         return result;

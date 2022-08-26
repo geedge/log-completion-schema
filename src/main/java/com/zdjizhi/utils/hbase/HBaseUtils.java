@@ -3,9 +3,11 @@ package com.zdjizhi.utils.hbase;
 import cn.hutool.log.Log;
 import cn.hutool.log.LogFactory;
 import com.zdjizhi.common.FlowWriteConfig;
+import com.zdjizhi.utils.StringUtil;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.client.*;
+import org.apache.hadoop.hbase.util.Bytes;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -24,7 +26,7 @@ import java.util.concurrent.TimeUnit;
 public class HBaseUtils {
     private static final Log logger = LogFactory.get();
     private static Map<String, String> radiusMap = new ConcurrentHashMap<>(16);
-    private static Map<Long, String> gtpcMap = new ConcurrentHashMap<>(16);
+    private static Map<Long, HashMap<String, Object>> gtpcMap = new ConcurrentHashMap<>(16);
     private static Connection connection;
     private static Long time;
 
@@ -45,7 +47,8 @@ public class HBaseUtils {
         RadiusRelation.getAllRadiusRelation(connection, radiusMap);
         GtpCRelation.getAllGtpCRelation(connection, gtpcMap);
         //定时更新
-        updateCache();
+        updateRadiusCache();
+        updateGtpcCache();
 
     }
 
@@ -69,6 +72,48 @@ public class HBaseUtils {
     }
 
     /**
+     * 获取HBase内String类型的值
+     *
+     * @param result     结果集
+     * @param familyName 列族名称
+     * @param columnName 列名称
+     * @return 结果数据
+     */
+    static String getString(Result result, String familyName, String columnName) {
+        byte[] familyBytes = Bytes.toBytes(familyName);
+        byte[] columnBytes = Bytes.toBytes(columnName);
+        boolean contains = result.containsColumn(familyBytes, columnBytes);
+        if (contains) {
+            String data = Bytes.toString(result.getValue(familyBytes, columnBytes)).trim();
+            if (StringUtil.isNotBlank(data)) {
+                return data;
+            }
+        }
+
+        return "";
+    }
+
+    /**
+     * 获取HBase内String类型的值
+     *
+     * @param result     结果集
+     * @param columnName 列名称
+     * @return 结果数据
+     */
+    static Long getLong(Result result, String familyName, String columnName) {
+        byte[] familyBytes = Bytes.toBytes(familyName);
+        byte[] columnBytes = Bytes.toBytes(columnName);
+        boolean contains = result.containsColumn(familyBytes, columnBytes);
+        if (contains) {
+            String data = Bytes.toString(result.getValue(familyBytes, columnBytes)).trim();
+            if (StringUtil.isNotBlank(data)) {
+                return Bytes.toLong(result.getValue(Bytes.toBytes(familyName), Bytes.toBytes(columnName)));
+            }
+        }
+        return 0L;
+    }
+
+    /**
      * 更新变量
      */
     private static void change() {
@@ -84,7 +129,7 @@ public class HBaseUtils {
     /**
      * 验证定时器,每隔一段时间验证一次-验证获取新的Cookie
      */
-    private void updateCache() {
+    private void updateRadiusCache() {
         ScheduledExecutorService executorService = new ScheduledThreadPoolExecutor(1);
         executorService.scheduleAtFixedRate(new Runnable() {
             @Override
@@ -102,7 +147,26 @@ public class HBaseUtils {
 
 
     /**
-     * 获取 account
+     * 验证定时器,每隔一段时间验证一次-验证获取新的Cookie
+     */
+    private void updateGtpcCache() {
+        ScheduledExecutorService executorService = new ScheduledThreadPoolExecutor(1);
+        executorService.scheduleAtFixedRate(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    if (FlowWriteConfig.HBASE_TICK_TUPLE_FREQ_SECS != 0) {
+                        change();
+                    }
+                } catch (RuntimeException e) {
+                    logger.error("HBaseUtils update hbaseCache is error===>{" + e + "}<===");
+                }
+            }
+        }, 1, FlowWriteConfig.HBASE_TICK_TUPLE_FREQ_SECS, TimeUnit.SECONDS);
+    }
+
+    /**
+     * 获取Radius account
      *
      * @param clientIp client_ip
      * @return account
@@ -119,12 +183,12 @@ public class HBaseUtils {
 
 
     /**
-     * 获取 account
+     * 获取GTPC用户信息
      *
-     * @param teid 上行TEID
+     * @param teid TEID
      * @return account
      */
-    public static String getGtpData(Long teid) {
+    public static HashMap<String, Object> getGtpData(Long teid) {
         if (FlowWriteConfig.HBASE_TICK_TUPLE_FREQ_SECS != 0) {
             if (hBaseUtils == null) {
                 getInstance();

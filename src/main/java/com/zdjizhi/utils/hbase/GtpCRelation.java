@@ -1,6 +1,5 @@
 package com.zdjizhi.utils.hbase;
 
-import cn.hutool.json.JSONObject;
 import cn.hutool.log.Log;
 import cn.hutool.log.LogFactory;
 import com.zdjizhi.common.FlowWriteConfig;
@@ -22,9 +21,9 @@ class GtpCRelation {
     private static final Log logger = LogFactory.get();
 
     /**
-     * 获取全量的Radius数据
+     * 获取全量的GTpc数据
      */
-    static void getAllGtpCRelation(Connection connection, Map<Long, String> gtpcMap) {
+    static void getAllGtpCRelation(Connection connection, Map<Long, HashMap<String, Object>> gtpcMap) {
         long begin = System.currentTimeMillis();
         ResultScanner scanner = null;
         try {
@@ -37,15 +36,17 @@ class GtpCRelation {
             for (Result result : scanner) {
                 int acctStatusType = GtpCRelation.getMsgType(result);
                 if (acctStatusType == 1) {
-                    Long teid = Bytes.toLong(result.getValue(Bytes.toBytes("gtp"), Bytes.toBytes("teid")));
-                    String phoneNumber = Bytes.toString(result.getValue(Bytes.toBytes("gtp"), Bytes.toBytes("phone_number"))).trim();
-                    String imsi = Bytes.toString(result.getValue(Bytes.toBytes("gtp"), Bytes.toBytes("imsi"))).trim();
-                    String imei = Bytes.toString(result.getValue(Bytes.toBytes("gtp"), Bytes.toBytes("imei"))).trim();
-                    JSONObject jsonObject = new JSONObject();
-                    jsonObject.set("common_phone_number", phoneNumber);
-                    jsonObject.set("common_imsi", imsi);
-                    jsonObject.set("common_imei", imei);
-                    gtpcMap.put(teid, jsonObject.toJSONString(0));
+                    Long upLinkTeid = HBaseUtils.getLong(result, FlowWriteConfig.GTPC_FAMILY_NAME, "uplink_teid");
+                    Long downLinkTeid = HBaseUtils.getLong(result, FlowWriteConfig.GTPC_FAMILY_NAME, "downlink_teid");
+                    String phoneNumber = HBaseUtils.getString(result, FlowWriteConfig.GTPC_FAMILY_NAME, "phone_number").trim();
+                    String imsi = HBaseUtils.getString(result, FlowWriteConfig.GTPC_FAMILY_NAME, "imsi").trim();
+                    String imei = HBaseUtils.getString(result, FlowWriteConfig.GTPC_FAMILY_NAME, "imei").trim();
+                    Long lastUpdateTime = HBaseUtils.getLong(result, FlowWriteConfig.GTPC_FAMILY_NAME, "last_update_time");
+
+                    HashMap<String, Object> buildUserData = buildUserData(phoneNumber, imsi, imei, lastUpdateTime);
+
+                    updateCache(gtpcMap, upLinkTeid, buildUserData, lastUpdateTime);
+                    updateCache(gtpcMap, downLinkTeid, buildUserData, lastUpdateTime);
                 }
             }
             logger.warn("The obtain the number of GTP-C relationships : " + gtpcMap.size());
@@ -68,7 +69,7 @@ class GtpCRelation {
      * @param startTime  开始时间
      * @param endTime    结束时间
      */
-    static void upgradeGtpCRelation(Connection connection, Map<Long, String> gtpcMap, Long startTime, Long endTime) {
+    static void upgradeGtpCRelation(Connection connection, Map<Long, HashMap<String, Object>> gtpcMap, Long startTime, Long endTime) {
         Long begin = System.currentTimeMillis();
         Table table = null;
         ResultScanner scanner = null;
@@ -82,18 +83,21 @@ class GtpCRelation {
             scanner = table.getScanner(scan);
             for (Result result : scanner) {
                 int acctStatusType = GtpCRelation.getMsgType(result);
-                Long teid = Bytes.toLong(result.getValue(Bytes.toBytes("gtp"), Bytes.toBytes("teid")));
+                Long upLinkTeid = HBaseUtils.getLong(result, FlowWriteConfig.GTPC_FAMILY_NAME, "uplink_teid");
+                Long downLinkTeid = HBaseUtils.getLong(result, FlowWriteConfig.GTPC_FAMILY_NAME, "downlink_teid");
                 if (acctStatusType == 1) {
-                    String phoneNumber = Bytes.toString(result.getValue(Bytes.toBytes("gtp"), Bytes.toBytes("phone_number"))).trim();
-                    String imsi = Bytes.toString(result.getValue(Bytes.toBytes("gtp"), Bytes.toBytes("imsi"))).trim();
-                    String imei = Bytes.toString(result.getValue(Bytes.toBytes("gtp"), Bytes.toBytes("imei"))).trim();
-                    JSONObject jsonObject = new JSONObject();
-                    jsonObject.set("common_phone_number", phoneNumber);
-                    jsonObject.set("common_imsi", imsi);
-                    jsonObject.set("common_imei", imei);
-                    gtpcMap.put(teid, jsonObject.toJSONString(0));
+                    String phoneNumber = HBaseUtils.getString(result, FlowWriteConfig.GTPC_FAMILY_NAME, "phone_number").trim();
+                    String imsi = HBaseUtils.getString(result, FlowWriteConfig.GTPC_FAMILY_NAME, "imsi").trim();
+                    String imei = HBaseUtils.getString(result, FlowWriteConfig.GTPC_FAMILY_NAME, "imei").trim();
+                    Long lastUpdateTime = HBaseUtils.getLong(result, FlowWriteConfig.GTPC_FAMILY_NAME, "last_update_time");
+
+                    HashMap<String, Object> buildUserData = buildUserData(phoneNumber, imsi, imei, lastUpdateTime);
+
+                    updateCache(gtpcMap, upLinkTeid, buildUserData, lastUpdateTime);
+                    updateCache(gtpcMap, downLinkTeid, buildUserData, lastUpdateTime);
                 } else if (acctStatusType == 2) {
-                    gtpcMap.remove(teid);
+                    removeCache(gtpcMap, upLinkTeid);
+                    removeCache(gtpcMap, downLinkTeid);
                 }
             }
             Long end = System.currentTimeMillis();
@@ -119,14 +123,64 @@ class GtpCRelation {
      * 获取当前用户上下线状态信息
      *
      * @param result HBase内获取的数据
-     * @return 状态 1-上线 2-下线
+     * @return onff_type 状态 1-上线 2-下线
      */
     private static int getMsgType(Result result) {
-        boolean hasType = result.containsColumn(Bytes.toBytes("gtp"), Bytes.toBytes("msg_type"));
+        boolean hasType = result.containsColumn(Bytes.toBytes(FlowWriteConfig.GTPC_FAMILY_NAME), Bytes.toBytes("msg_type"));
         if (hasType) {
-            return Bytes.toInt(result.getValue(Bytes.toBytes("gtp"), Bytes.toBytes("msg_type")));
+            return Bytes.toInt(result.getValue(Bytes.toBytes(FlowWriteConfig.GTPC_FAMILY_NAME), Bytes.toBytes("msg_type")));
         } else {
-            return 1;
+            return 0;
+        }
+    }
+
+    /**
+     * 构建用户信息
+     *
+     * @param phoneNumber 手机号
+     * @param imsi        用户标识
+     * @param imei        设备标识
+     * @return 用户信息
+     */
+    private static HashMap<String, Object> buildUserData(String phoneNumber, String imsi, String imei, Long lastUpdateTime) {
+        HashMap<String, Object> tmpMap = new HashMap<>(4);
+        tmpMap.put("common_phone_number", phoneNumber);
+        tmpMap.put("common_imsi", imsi);
+        tmpMap.put("common_imei", imei);
+        tmpMap.put("last_update_time", lastUpdateTime);
+        return tmpMap;
+    }
+
+    /**
+     * 判断缓存与新获取的数据时间戳大小，若大于缓存内记录的时间戳；则更新缓存
+     *
+     * @param gtpcMap        缓存集合
+     * @param teid           上下行teid
+     * @param userData       获取HBase内的用户信息
+     * @param lastUpdateTime 该用户信息最后更新时间
+     */
+    private static void updateCache(Map<Long, HashMap<String, Object>> gtpcMap, Long teid, HashMap<String, Object> userData, Long lastUpdateTime) {
+        if (teid != 0L) {
+            if (gtpcMap.containsKey(teid)) {
+                Long oldUpdateTime = Long.parseLong(gtpcMap.get(teid).get("last_update_time").toString());
+                if (lastUpdateTime > oldUpdateTime) {
+                    gtpcMap.put(teid, userData);
+                }
+            } else {
+                gtpcMap.put(teid, userData);
+            }
+        }
+    }
+
+    /**
+     * 将过期用户从缓存中删除
+     *
+     * @param gtpcMap 缓存集合
+     * @param teid    上下行teid
+     */
+    private static void removeCache(Map<Long, HashMap<String, Object>> gtpcMap, Long teid) {
+        if (teid != 0L) {
+            gtpcMap.remove(teid);
         }
     }
 }

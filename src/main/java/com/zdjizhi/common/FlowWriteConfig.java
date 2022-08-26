@@ -37,6 +37,10 @@ public class FlowWriteConfig {
      */
     public static final String ENCODING = "UTF8";
 
+    public static final String GTPC_FAMILY_NAME = "gtp";
+    public static final String RADIUS_FAMILY_NAME = "radius";
+
+
     /**
      * Nacos
      */

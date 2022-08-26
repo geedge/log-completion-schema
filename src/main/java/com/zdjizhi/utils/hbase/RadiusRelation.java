@@ -34,8 +34,8 @@ class RadiusRelation {
             scanner = table.getScanner(scan);
             for (Result result : scanner) {
                 int acctStatusType = RadiusRelation.getAcctStatusType(result);
-                String framedIp = Bytes.toString(result.getValue(Bytes.toBytes("radius"), Bytes.toBytes("framed_ip")));
-                String account = Bytes.toString(result.getValue(Bytes.toBytes("radius"), Bytes.toBytes("account")));
+                String framedIp = HBaseUtils.getString(result, FlowWriteConfig.RADIUS_FAMILY_NAME, "framed_ip").trim();
+                String account = HBaseUtils.getString(result, FlowWriteConfig.RADIUS_FAMILY_NAME, "account").trim();
                 if (acctStatusType == 1) {
                     radiusMap.put(framedIp, account);
                 }
@@ -73,8 +73,8 @@ class RadiusRelation {
             scanner = table.getScanner(scan);
             for (Result result : scanner) {
                 int acctStatusType = RadiusRelation.getAcctStatusType(result);
-                String framedIp = Bytes.toString(result.getValue(Bytes.toBytes("radius"), Bytes.toBytes("framed_ip"))).trim();
-                String account = Bytes.toString(result.getValue(Bytes.toBytes("radius"), Bytes.toBytes("account"))).trim();
+                String framedIp = HBaseUtils.getString(result, FlowWriteConfig.RADIUS_FAMILY_NAME, "framed_ip").trim();
+                String account = HBaseUtils.getString(result, FlowWriteConfig.RADIUS_FAMILY_NAME, "account").trim();
                 if (acctStatusType == 1) {
                     if (radiusMap.containsKey(framedIp)) {
                         boolean same = account.equals(radiusMap.get(framedIp));
@@ -89,7 +89,7 @@ class RadiusRelation {
                 }
             }
             Long end = System.currentTimeMillis();
-            logger.warn("The current number of Radius relationships is:: " + radiusMap.keySet().size());
+            logger.warn("The current number of Radius relationships is: " + radiusMap.keySet().size());
             logger.warn("The time used to update the Radius relationship is: " + (end - begin) + "ms");
         } catch (IOException | RuntimeException e) {
             logger.error("Radius relationship update exception, the content is:" + e);
@@ -114,9 +114,9 @@ class RadiusRelation {
      * @return 状态 1-上线 2-下线
      */
     private static int getAcctStatusType(Result result) {
-        boolean hasType = result.containsColumn(Bytes.toBytes("radius"), Bytes.toBytes("acct_status_type"));
+        boolean hasType = result.containsColumn(Bytes.toBytes(FlowWriteConfig.RADIUS_FAMILY_NAME), Bytes.toBytes("acct_status_type"));
         if (hasType) {
-            return Bytes.toInt(result.getValue(Bytes.toBytes("radius"), Bytes.toBytes("acct_status_type")));
+            return Bytes.toInt(result.getValue(Bytes.toBytes(FlowWriteConfig.RADIUS_FAMILY_NAME), Bytes.toBytes("acct_status_type")));
         } else {
             return 1;
         }

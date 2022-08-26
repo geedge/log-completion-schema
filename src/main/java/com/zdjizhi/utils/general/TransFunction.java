@@ -15,6 +15,7 @@ import com.zdjizhi.utils.json.JsonParseUtil;
 import com.zdjizhi.utils.json.JsonPathUtil;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
 
@@ -115,7 +116,9 @@ class TransFunction {
     }
 
     /**
-     * 借助HBase补齐GTP-C信息
+     * 借助HBase补齐GTP-C信息,解析tunnels信息，优先使用gtp_uplink_teid，其次使用gtp_downlink_teid
+     * <p>
+     * "common_tunnels":[{"tunnels_schema_type":"GTP","gtp_uplink_teid":235261261,"gtp_downlink_teid":665547833,"gtp_sgw_ip":"192.56.5.2","gtp_pgw_ip":"192.56.10.20","gtp_sgw_port":2152,"gtp_pgw_port":2152}]
      *
      * @param jsonMap     原始日志json
      * @param logValue    上行TEID
@@ -136,11 +139,10 @@ class TransFunction {
 
             if (teid != null) {
                 String[] appendToKeys = appendToKey.split(FlowWriteConfig.FORMAT_SPLITTER);
-                String userData = HBaseUtils.getGtpData(teid);
+                HashMap<String, Object> userData = HBaseUtils.getGtpData(teid);
                 if (userData != null) {
-                    JSONObject schemaJson = new JSONObject(userData, false, true);
                     for (String key : appendToKeys) {
-                        JsonParseUtil.setValue(jsonMap, key, schemaJson.getObj(key));
+                        JsonParseUtil.setValue(jsonMap, key, userData.get(key).toString());
                     }
                 } else {
                     logger.warn("Description The user whose TEID is " + teid + " was not matched!");
@@ -206,7 +208,7 @@ class TransFunction {
                 }
             }
         } catch (ClassCastException | InvalidPathException | ArrayIndexOutOfBoundsException e) {
-            logger.error("The device label resolution exception or [expr] analytic expression error" + e);
+            logger.error("The label resolution exception or [expr] analytic expression error" + e);
         }
         return flattenResult;
     }
