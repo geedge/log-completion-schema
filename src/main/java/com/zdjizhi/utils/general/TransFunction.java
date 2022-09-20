@@ -26,11 +26,6 @@ class TransFunction {
     private static final Log logger = LogFactory.get();
 
     /**
-     * 校验数字正则
-     */
-    private static final Pattern PATTERN = Pattern.compile("[0-9]*");
-
-    /**
      * IP定位库工具类
      */
     private static IpLookupV2 ipLookup = new IpLookupV2.Builder(false)
@@ -130,7 +125,7 @@ class TransFunction {
             Long teid = null;
             String[] exprs = param.split(FlowWriteConfig.FORMAT_SPLITTER);
             for (String expr : exprs) {
-                Long value = JsonPathUtil.getLongValue(logValue, expr);
+                Long value = JsonPathUtil.getTeidValue(logValue, expr);
                 if (value != null) {
                     teid = value;
                     break;

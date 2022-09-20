@@ -17,62 +17,14 @@ import java.util.ArrayList;
 public class JsonPathUtil {
     private static final Log logger = LogFactory.get();
 
-
     /**
-     * 通过 josnPath 解析，返回String类型数据
+     * 通过 josnPath 解析，返回TEID数据
      *
      * @param message json数据
      * @param expr    解析表达式
      * @return 返回值
      */
-    public static String getStringValue(String message, String expr) {
-        String result = null;
-        try {
-            if (StringUtil.isNotBlank(message) && StringUtil.isNotBlank(expr)) {
-                ArrayList<Object> read = JsonPath.parse(message).read(expr);
-                if (read.size() >= 1) {
-                    result = read.get(0).toString();
-                }
-            }
-        } catch (RuntimeException e) {
-            logger.error("JSONPath parsing json returns String data exception" + e);
-        }
-
-        return result;
-    }
-
-
-    /**
-     * 通过 josnPath 解析，返回Long类型数据
-     *
-     * @param message json数据
-     * @param expr    解析表达式
-     * @return 返回值
-     */
-    public static Integer getIntegerValue(String message, String expr) {
-        Integer result = null;
-        try {
-            if (StringUtil.isNotBlank(message) && StringUtil.isNotBlank(expr)) {
-                ArrayList<Object> read = JsonPath.parse(message).read(expr);
-                if (read.size() >= 1) {
-                    result = Integer.parseInt(read.get(0).toString());
-                }
-            }
-        } catch (RuntimeException e) {
-            logger.error("JSONPath parsing json returns Long data exception" + e);
-        }
-
-        return result;
-    }
-
-    /**
-     * 通过 josnPath 解析，返回Long类型数据
-     *
-     * @param message json数据
-     * @param expr    解析表达式
-     * @return 返回值
-     */
-    public static Long getLongValue(String message, String expr) {
+    public static Long getTeidValue(String message, String expr) {
         Long result = null;
         try {
             if (StringUtil.isNotBlank(message) && StringUtil.isNotBlank(expr)) {

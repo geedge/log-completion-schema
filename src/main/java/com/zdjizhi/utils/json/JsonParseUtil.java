@@ -9,7 +9,6 @@ import com.alibaba.nacos.api.PropertyKeyConst;
 import com.alibaba.nacos.api.config.ConfigService;
 import com.alibaba.nacos.api.config.listener.Listener;
 import com.alibaba.nacos.api.exception.NacosException;
-import com.jayway.jsonpath.JsonPath;
 import com.zdjizhi.common.FlowWriteConfig;
 import com.zdjizhi.utils.StringUtil;
 
@@ -32,9 +31,14 @@ public class JsonParseUtil {
     private static ArrayList<String> dropList = new ArrayList<>();
 
     /**
-     * 在内存中加载反射类用的map
+     * 获取schema指定的有效字段及类型
      */
     private static HashMap<String, Class> jsonFieldsMap;
+
+    /**
+     * 获取包含默认值的字段
+     */
+    private static HashMap<String, Object> defaultFieldsMap = new HashMap<>(16);
 
     /**
      * 获取任务列表
@@ -162,7 +166,8 @@ public class JsonParseUtil {
      */
     public static Map<String, Object> typeTransform(Map<String, Object> jsonMap) throws RuntimeException {
         JsonParseUtil.dropJsonField(jsonMap);
-        HashMap<String, Object> tmpMap = new HashMap<>(192);
+        JsonParseUtil.setFieldDefault(jsonMap);
+        HashMap<String, Object> tmpMap = new HashMap<>(256);
         for (String key : jsonMap.keySet()) {
             if (jsonFieldsMap.containsKey(key)) {
                 String simpleName = jsonFieldsMap.get(key).getSimpleName();
@@ -197,16 +202,36 @@ public class JsonParseUtil {
         return jobList;
     }
 
+    /**
+     * 删除schema内指定的无效字段（jackson）
+     *
+     * @param jsonMap 原始日志
+     */
+    public static void dropJsonField(Map<String, Object> jsonMap) {
+        for (String field : dropList) {
+            jsonMap.remove(field);
+        }
+    }
 
     /**
-     * 通过获取String类型的网关schema链接来获取map，用于生成一个Object类型的对象
-     * <p>
-     * //     * @param http 网关schema地址
+     * 根据schema内指定的默认值，给数据赋值。
+     *
+     * @param jsonMap 原始日志
+     */
+    private static void setFieldDefault(Map<String, Object> jsonMap) {
+        for (String key : defaultFieldsMap.keySet()) {
+            jsonMap.put(key, defaultFieldsMap.get(key));
+        }
+    }
+
+
+    /**
+     * 通过schema来获取所需的字段及字段类型。
      *
      * @return 用于反射生成schema类型的对象的一个map集合
      */
     private static HashMap<String, Class> getFieldsFromSchema(String schema) {
-        HashMap<String, Class> map = new HashMap<>(16);
+        HashMap<String, Class> map = new HashMap<>(256);
 
         //获取fields，并转化为数组，数组的每个元素都是一个name doc type
         JSONObject schemaJson = new JSONObject(schema, false, true);
@@ -215,10 +240,13 @@ public class JsonParseUtil {
         for (Object field : fields) {
             String filedStr = field.toString();
             if (checkKeepField(filedStr)) {
-                String name = JsonPath.read(filedStr, "$.name").toString();
-                String type = JsonPath.read(filedStr, "$.type").toString();
-                if (type.contains("{")) {
-                    type = JsonPath.read(filedStr, "$.type.type").toString();
+                JSONObject fieldJson = new JSONObject(filedStr, false, true);
+                String name = fieldJson.getStr("name");
+                String type = fieldJson.getStr("type");
+                if (fieldJson.containsKey("default")) {
+                    System.out.println(fieldJson.toString());
+                    System.out.println(fieldJson.get("default"));
+                    defaultFieldsMap.put(name, fieldJson.get("default"));
                 }
                 //组合用来生成实体类的map
                 map.put(name, getClassName(type));
@@ -240,26 +268,15 @@ public class JsonParseUtil {
         JSONObject fieldJson = new JSONObject(message, false, true);
         boolean hasDoc = fieldJson.containsKey("doc");
         if (hasDoc) {
-            boolean isHiveVi = JsonPath.read(message, "$.doc").toString().contains("visibility");
-            if (isHiveVi) {
-                String visibility = JsonPath.read(message, "$.doc.visibility").toString();
+            JSONObject doc = new JSONObject(fieldJson.getStr("doc"), false, true);
+            if (doc.containsKey("visibility")) {
+                String visibility = doc.getStr("visibility");
                 if (FlowWriteConfig.VISIBILITY.equals(visibility)) {
                     isKeepField = false;
                 }
             }
         }
         return isKeepField;
-    }
-
-    /**
-     * 删除schema内指定的无效字段（jackson）
-     *
-     * @param jsonMap
-     */
-    public static void dropJsonField(Map<String, Object> jsonMap) {
-        for (String field : dropList) {
-            jsonMap.remove(field);
-        }
     }
 
     /**
@@ -315,6 +332,7 @@ public class JsonParseUtil {
         jobList.clear();
         jsonFieldsMap.clear();
         dropList.clear();
+        defaultFieldsMap.clear();
     }
 
 }
