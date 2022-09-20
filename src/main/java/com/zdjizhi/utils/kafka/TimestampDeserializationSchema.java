@@ -41,7 +41,6 @@ public class TimestampDeserializationSchema implements KafkaDeserializationSchem
                 return json;
             } catch (RuntimeException e) {
                 logger.error("KafkaConsumer Deserialize failed,The exception is : " + e.getMessage());
-                e.printStackTrace();
             }
         }
         return null;

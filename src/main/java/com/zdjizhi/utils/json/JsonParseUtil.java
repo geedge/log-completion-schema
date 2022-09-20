@@ -244,8 +244,6 @@ public class JsonParseUtil {
                 String name = fieldJson.getStr("name");
                 String type = fieldJson.getStr("type");
                 if (fieldJson.containsKey("default")) {
-                    System.out.println(fieldJson.toString());
-                    System.out.println(fieldJson.get("default"));
                     defaultFieldsMap.put(name, fieldJson.get("default"));
                 }
                 //组合用来生成实体类的map
