@@ -159,8 +159,6 @@ public class HBaseUtils {
         long nowTime = System.currentTimeMillis();
         RadiusRelation.upgradeRadiusRelation(connection, radiusMap, time - 1000, nowTime + 500);
         GtpCRelation.upgradeGtpCRelation(connection, gtpcMap, time - 1000, nowTime + 500);
-        System.out.println(gtpcMap);
-        System.out.println(radiusMap);
         time = nowTime;
     }
 
