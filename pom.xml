@@ -6,7 +6,7 @@
 
     <groupId>com.zdjizhi</groupId>
     <artifactId>log-completion-schema</artifactId>
-    <version>220819-DOUBLE-TEID</version>
+    <version>20220921-VSYS</version>
 
     <name>log-completion-schema</name>
     <url>http://www.example.com</url>

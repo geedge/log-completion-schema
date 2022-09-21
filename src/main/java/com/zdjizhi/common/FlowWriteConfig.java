@@ -1,7 +1,7 @@
 package com.zdjizhi.common;
 
 
-import com.zdjizhi.utils.system.FlowWriteConfigurations;
+import com.zdjizhi.tools.system.FlowWriteConfigurations;
 import org.jasypt.encryption.pbe.StandardPBEStringEncryptor;
 
 /**
@@ -39,6 +39,8 @@ public class FlowWriteConfig {
 
     public static final String GTPC_FAMILY_NAME = "gtp";
     public static final String RADIUS_FAMILY_NAME = "radius";
+    public static final String COMMON_FAMILY_NAME = "common";
+    public static final String DEFAULT_RELATIONSHIP_MODULE = "vsys";
 
 
     /**
@@ -61,6 +63,7 @@ public class FlowWriteConfig {
     public static final Integer LOG_NEED_COMPLETE = FlowWriteConfigurations.getIntProperty(0, "log.need.complete");
     public static final String MAIL_DEFAULT_CHARSET = FlowWriteConfigurations.getStringProperty(1, "mail.default.charset");
     public static final Integer LOG_TRANSFORM_TYPE = FlowWriteConfigurations.getIntProperty(1, "log.transform.type");
+    public static final String DATA_RELATIONSHIP_MODEL = FlowWriteConfigurations.getStringProperty(1, "data.relationship.model");
     public static final Integer BUFFER_TIMEOUT = FlowWriteConfigurations.getIntProperty(1, "buffer.timeout");
 
     /**
