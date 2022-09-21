@@ -54,9 +54,9 @@ class TransFunction {
         try {
             detail = ipLookup.cityLookupDetail(ip);
         } catch (NullPointerException npe) {
-            logger.error("The MMDB file is not loaded or IP is null! " + npe);
+            logger.error("The MMDB file is not loaded or IP is null! " + npe.getMessage());
         } catch (RuntimeException e) {
-            logger.error("Get clientIP location error! " + e);
+            logger.error("Get clientIP location error! " + e.getMessage());
         }
         return detail;
     }
@@ -72,9 +72,9 @@ class TransFunction {
         try {
             asn = ipLookup.asnLookup(ip);
         } catch (NullPointerException npe) {
-            logger.error("The MMDB file is not loaded or IP is null! " + npe);
+            logger.error("The MMDB file is not loaded or IP is null! " + npe.getMessage());
         } catch (RuntimeException e) {
-            logger.error("Get IP ASN error! " + e);
+            logger.error("Get IP ASN error! " + e.getMessage());
         }
         return asn;
     }
@@ -90,9 +90,9 @@ class TransFunction {
         try {
             country = ipLookup.countryLookup(ip);
         } catch (NullPointerException npe) {
-            logger.error("The MMDB file is not loaded or IP is null! " + npe);
+            logger.error("The MMDB file is not loaded or IP is null! " + npe.getMessage());
         } catch (RuntimeException e) {
-            logger.error("Get ServerIP location error! " + e);
+            logger.error("Get ServerIP location error! " + e.getMessage());
         }
         return country;
     }
@@ -151,7 +151,7 @@ class TransFunction {
                 }
             }
         } catch (RuntimeException re) {
-            logger.error("An exception occurred in teid type conversion or parsing of user information!" + re);
+            logger.error("An exception occurred in teid type conversion or parsing of user information!" + re.getMessage());
         }
     }
 
@@ -188,7 +188,7 @@ class TransFunction {
                 }
             }
         } catch (RuntimeException e) {
-            logger.error("Resolve Base64 exception, exception information:" + e);
+            logger.error("Resolve Base64 exception, exception information:" + e.getMessage());
         }
         return result;
     }
@@ -210,7 +210,7 @@ class TransFunction {
                 }
             }
         } catch (ClassCastException | InvalidPathException | ArrayIndexOutOfBoundsException e) {
-            logger.error("The label resolution exception or [expr] analytic expression error" + e);
+            logger.error("The label resolution exception or [expr] analytic expression error" + e.getMessage());
         }
         return flattenResult;
     }
@@ -253,7 +253,7 @@ class TransFunction {
                 }
             }
         } catch (RuntimeException e) {
-            logger.error("IF 函数执行异常,异常信息:" + e);
+            logger.error("IF function execution exception, exception information:" + e.getMessage());
         }
         return result;
     }
