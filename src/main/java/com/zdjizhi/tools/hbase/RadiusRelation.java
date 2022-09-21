@@ -45,8 +45,6 @@ class RadiusRelation {
                     }
                 }
             }
-            System.out.println(radiusMap.toString());
-
             logger.warn("The obtain the number of RADIUS relationships : " + radiusMap.size());
             logger.warn("The time spent to obtain radius relationships : " + (System.currentTimeMillis() - begin) + "ms");
         } catch (IOException | RuntimeException e) {

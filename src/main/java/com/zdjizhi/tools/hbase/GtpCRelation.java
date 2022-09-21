@@ -56,8 +56,6 @@ class GtpCRelation {
                     }
                 }
             }
-
-            System.out.println(gtpcMap.toString());
             logger.warn("The obtain the number of GTP-C relationships : " + gtpcMap.size());
             logger.warn("The time spent to obtain GTP-C relationships : " + (System.currentTimeMillis() - begin) + "ms");
         } catch (IOException | RuntimeException e) {
