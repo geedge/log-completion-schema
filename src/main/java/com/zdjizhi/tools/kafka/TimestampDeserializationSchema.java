@@ -37,10 +37,15 @@ public class TimestampDeserializationSchema implements KafkaDeserializationSchem
                 long timestamp = record.timestamp() / 1000;
                 String value = new String((byte[]) record.value(), FlowWriteConfig.ENCODING);
                 Map<String, Object> json = (Map<String, Object>) JsonMapper.fromJsonString(value, Map.class);
-                json.put("common_ingestion_time", timestamp);
+                if (json != null) {
+                    if (timestamp != 0L) {
+                        json.put("common_ingestion_time", timestamp);
+                    }
+                }
                 return json;
             } catch (RuntimeException e) {
                 logger.error("KafkaConsumer Deserialize failed,The exception is : " + e.getMessage());
+                e.printStackTrace();
             }
         }
         return null;

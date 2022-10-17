@@ -180,12 +180,8 @@ class TransFunction {
     static String decodeBase64(String message, Object charset) {
         String result = "";
         try {
-            if (StringUtil.isNotBlank(message)) {
-                if (charset == null) {
-                    result = Base64.decodeStr(message, FlowWriteConfig.MAIL_DEFAULT_CHARSET);
-                } else {
-                    result = Base64.decodeStr(message, charset.toString());
-                }
+            if (StringUtil.isNotBlank(message) && charset != null) {
+                result = Base64.decodeStr(message, charset.toString());
             }
         } catch (RuntimeException e) {
             logger.error("Resolve Base64 exception, exception information:" + e.getMessage());
