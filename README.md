@@ -37,7 +37,7 @@
 * ~~app_match~~
 > ~~根据APP_ID获取对应的APP名称~~ 22.02版本后弃用
 * decode_of_base64
-> 根据编码解码base64，若编码字段为空则根据默认编码解析(UTF-8)
+> 根据日志提供的编码，解析base64,若编码为空时 ETL不做转换，保留原始数据信息。
 * flattenSpec
 > 根据表达式解析json,使用jsonPath工具类  
 > https://github.com/json-path/JsonPath
