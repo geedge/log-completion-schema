@@ -9,6 +9,7 @@ import com.alibaba.nacos.api.PropertyKeyConst;
 import com.alibaba.nacos.api.config.ConfigService;
 import com.alibaba.nacos.api.config.listener.Listener;
 import com.alibaba.nacos.api.exception.NacosException;
+import com.jayway.jsonpath.JsonPath;
 import com.zdjizhi.common.FlowWriteConfig;
 import com.zdjizhi.utils.StringUtil;
 
@@ -248,6 +249,11 @@ public class JsonParseUtil {
                 JSONObject fieldJson = new JSONObject(filedStr, false, true);
                 String name = fieldJson.getStr("name");
                 String type = fieldJson.getStr("type");
+                if (type.contains("{")) {
+                    JSONObject types = new JSONObject(type, false, true);
+                    type = types.getStr("type");
+                }
+
                 if (fieldJson.containsKey("default")) {
                     defaultFieldsMap.put(name, fieldJson.get("default"));
                 }
@@ -257,6 +263,7 @@ public class JsonParseUtil {
                 dropList.add(filedStr);
             }
         }
+        System.out.println(map.toString());
         return map;
     }
 
