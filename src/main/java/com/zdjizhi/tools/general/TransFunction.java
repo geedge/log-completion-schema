@@ -1,6 +1,5 @@
 package com.zdjizhi.tools.general;
 
-import cn.hutool.core.codec.Base64;
 import cn.hutool.log.Log;
 import cn.hutool.log.LogFactory;
 import com.jayway.jsonpath.InvalidPathException;
@@ -13,7 +12,9 @@ import com.zdjizhi.utils.StringUtil;
 import com.zdjizhi.tools.json.JsonParseUtil;
 import com.zdjizhi.tools.json.JsonPathUtil;
 
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -178,14 +179,22 @@ class TransFunction {
      * @return 解码字符串
      */
     static String decodeBase64(String message, Object charset) {
+        String result = "";
         try {
-            if (StringUtil.isNotBlank(message) && charset != null) {
-                return Base64.decodeStr(message, charset.toString());
+            if (StringUtil.isNotBlank(message)) {
+                byte[] base64decodedBytes = Base64.getDecoder().decode(message);
+                if (charset == null) {
+                    result = new String(base64decodedBytes);
+                } else {
+                    result = new String(base64decodedBytes, charset.toString());
+                }
             }
         } catch (RuntimeException e) {
             logger.error("Resolve Base64 exception, exception information:" + e.getMessage());
+        } catch (UnsupportedEncodingException e) {
+            logger.error("The Character Encoding [" + charset.toString() + "] is not supported.exception information:" + e.getMessage());
         }
-        return message;
+        return result;
     }
 
     /**
