@@ -1,9 +1,5 @@
 package com.zdjizhi.tools.general;
 
-
-import cn.hutool.log.Log;
-import cn.hutool.log.LogFactory;
-import com.zdjizhi.utils.JsonMapper;
 import com.zdjizhi.tools.json.JsonParseUtil;
 
 import java.util.Map;
@@ -14,42 +10,7 @@ import java.util.Map;
  *
  * @author qidaijie
  */
-public class TransFormMap {
-    private static final Log logger = LogFactory.get();
-
-    /**
-     * 解析日志，并补全
-     *
-     * @param jsonMap kafka Topic消费原始日志并解析
-     * @return 补全后的日志
-     */
-    @SuppressWarnings("unchecked")
-    public static String dealCommonMessage(Map<String, Object> jsonMap) {
-        try {
-            JsonParseUtil.dropJsonField(jsonMap);
-            for (String[] strings : JsonParseUtil.getJobList()) {
-                //该日志字段的值
-                Object logValue = JsonParseUtil.getValue(jsonMap, strings[0]);
-                //结果值映射到的日志字段key
-                String appendToKey = strings[1];
-                //匹配操作函数的字段
-                String function = strings[2];
-                //额外的参数的值
-                String param = strings[3];
-
-                //结果值映射到的日志字段原始value
-                Object appendToValue = JsonParseUtil.getValue(jsonMap, appendToKey);
-
-                functionSet(function, jsonMap, appendToKey, appendToValue, logValue, param);
-            }
-            return JsonMapper.toJsonString(jsonMap);
-        } catch (RuntimeException e) {
-            logger.error("TransForm logs failed,The exception is :" + e);
-            return null;
-        }
-    }
-
-
+public class TransForm {
     /**
      * 根据schema描述对应字段进行操作的 函数集合
      *
@@ -60,7 +21,7 @@ public class TransFormMap {
      * @param logValue      用到的参数的值
      * @param param         额外的参数的值
      */
-    private static void functionSet(String function, Map<String, Object> jsonMap, String appendToKey, Object appendToValue, Object logValue, String param) {
+    public static void functionSet(String function, Map<String, Object> jsonMap, String appendToKey, Object appendToValue, Object logValue, String param,IpLookup ipLookup) {
         switch (function) {
             case "current_timestamp":
                 if (!(appendToValue instanceof Long)) {
@@ -72,17 +33,17 @@ public class TransFormMap {
                 break;
             case "geo_ip_detail":
                 if (logValue != null && appendToValue == null) {
-                    JsonParseUtil.setValue(jsonMap, appendToKey, TransFunction.getGeoIpDetail(logValue.toString()));
+                    JsonParseUtil.setValue(jsonMap, appendToKey, TransFunction.getGeoIpDetail(logValue.toString(),ipLookup));
                 }
                 break;
             case "geo_asn":
                 if (logValue != null && appendToValue == null) {
-                    JsonParseUtil.setValue(jsonMap, appendToKey, TransFunction.getGeoAsn(logValue.toString()));
+                    JsonParseUtil.setValue(jsonMap, appendToKey, TransFunction.getGeoAsn(logValue.toString(),ipLookup));
                 }
                 break;
             case "geo_ip_country":
                 if (logValue != null && appendToValue == null) {
-                    JsonParseUtil.setValue(jsonMap, appendToKey, TransFunction.getGeoIpCountry(logValue.toString()));
+                    JsonParseUtil.setValue(jsonMap, appendToKey, TransFunction.getGeoIpCountry(logValue.toString(),ipLookup));
                 }
                 break;
             case "flattenSpec":

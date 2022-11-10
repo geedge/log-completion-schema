@@ -1,4 +1,4 @@
-package com.zdjizhi.tools.functions;
+package com.zdjizhi.tools.functions.filter;
 
 import com.zdjizhi.utils.StringUtil;
 import org.apache.flink.api.common.functions.FilterFunction;
@@ -9,7 +9,7 @@ import org.apache.flink.api.common.functions.FilterFunction;
  * @Description:
  * @date 2021/5/2715:01
  */
-public class FilterNullFunction implements FilterFunction<String> {
+public class FilterNull implements FilterFunction<String> {
     @Override
     public boolean filter(String message) {
         return StringUtil.isNotBlank(message);

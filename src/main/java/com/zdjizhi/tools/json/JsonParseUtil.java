@@ -9,7 +9,6 @@ import com.alibaba.nacos.api.PropertyKeyConst;
 import com.alibaba.nacos.api.config.ConfigService;
 import com.alibaba.nacos.api.config.listener.Listener;
 import com.alibaba.nacos.api.exception.NacosException;
-import com.jayway.jsonpath.JsonPath;
 import com.zdjizhi.common.FlowWriteConfig;
 import com.zdjizhi.utils.StringUtil;
 
@@ -55,8 +54,8 @@ public class JsonParseUtil {
         propNacos.setProperty(PropertyKeyConst.PASSWORD, FlowWriteConfig.NACOS_PIN);
         try {
             ConfigService configService = NacosFactory.createConfigService(propNacos);
-            String dataId = FlowWriteConfig.NACOS_DATA_ID;
-            String group = FlowWriteConfig.NACOS_GROUP;
+            String dataId = FlowWriteConfig.NACOS_SCHEMA_DATA_ID;
+            String group = FlowWriteConfig.NACOS_SCHEMA_GROUP;
             String schema = configService.getConfig(dataId, group, 5000);
             if (StringUtil.isNotBlank(schema)) {
                 jsonFieldsMap = getFieldsFromSchema(schema);
@@ -263,7 +262,6 @@ public class JsonParseUtil {
                 dropList.add(filedStr);
             }
         }
-        System.out.println(map.toString());
         return map;
     }
 

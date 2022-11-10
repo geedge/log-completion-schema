@@ -90,7 +90,7 @@ public class NacosTest {
         }
 
         //keep running,change nacos config,print new config
-        while (true) {
+        for (int i = 0; i < 3; i++) {
             try {
                 Thread.sleep(5000);
             } catch (InterruptedException e) {

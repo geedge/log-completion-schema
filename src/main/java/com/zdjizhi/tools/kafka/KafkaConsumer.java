@@ -34,7 +34,7 @@ public class KafkaConsumer {
      * @return kafka logs -> map
      */
     @SuppressWarnings("unchecked")
-    public static FlinkKafkaConsumer<Map<String, Object>> myDeserializationConsumer() {
+    public static FlinkKafkaConsumer<Map<String, Object>> timestampDeserializationConsumer() {
         FlinkKafkaConsumer<Map<String, Object>> kafkaConsumer = new FlinkKafkaConsumer<>(FlowWriteConfig.SOURCE_KAFKA_TOPIC,
                 new TimestampDeserializationSchema(), createConsumerConfig());
 

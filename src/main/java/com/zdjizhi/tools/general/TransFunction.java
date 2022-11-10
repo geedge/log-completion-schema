@@ -7,7 +7,6 @@ import com.jayway.jsonpath.JsonPath;
 import com.zdjizhi.common.FlowWriteConfig;
 import com.zdjizhi.tools.hbase.HBaseUtils;
 import com.zdjizhi.utils.FormatUtils;
-import com.zdjizhi.utils.IpLookupV2;
 import com.zdjizhi.utils.StringUtil;
 import com.zdjizhi.tools.json.JsonParseUtil;
 import com.zdjizhi.tools.json.JsonPathUtil;
@@ -25,18 +24,6 @@ class TransFunction {
     private static final Log logger = LogFactory.get();
 
     /**
-     * IP定位库工具类
-     */
-    private static IpLookupV2 ipLookup = new IpLookupV2.Builder(false)
-            .loadDataFileV4(FlowWriteConfig.TOOLS_LIBRARY + "ip_v4_built_in.mmdb")
-            .loadDataFileV6(FlowWriteConfig.TOOLS_LIBRARY + "ip_v6_built_in.mmdb")
-            .loadDataFilePrivateV4(FlowWriteConfig.TOOLS_LIBRARY + "ip_v4_user_defined.mmdb")
-            .loadDataFilePrivateV6(FlowWriteConfig.TOOLS_LIBRARY + "ip_v6_user_defined.mmdb")
-            .loadAsnDataFile(FlowWriteConfig.TOOLS_LIBRARY + "asn_v4.mmdb")
-            .loadAsnDataFileV6(FlowWriteConfig.TOOLS_LIBRARY + "asn_v6.mmdb")
-            .build();
-
-    /**
      * 生成当前时间戳的操作
      */
     static long getCurrentTime() {
@@ -50,7 +37,7 @@ class TransFunction {
      * @param ip client IP
      * @return ip地址详细信息
      */
-    static String getGeoIpDetail(String ip) {
+    static String getGeoIpDetail(String ip,IpLookup ipLookup) {
         String detail = "";
         try {
             detail = ipLookup.cityLookupDetail(ip);
@@ -68,7 +55,7 @@ class TransFunction {
      * @param ip client/server IP
      * @return ASN
      */
-    static String getGeoAsn(String ip) {
+    static String getGeoAsn(String ip,IpLookup ipLookup) {
         String asn = "";
         try {
             asn = ipLookup.asnLookup(ip);
@@ -86,7 +73,7 @@ class TransFunction {
      * @param ip server IP
      * @return 国家
      */
-    static String getGeoIpCountry(String ip) {
+    static String getGeoIpCountry(String ip,IpLookup ipLookup) {
         String country = "";
         try {
             country = ipLookup.countryLookup(ip);
@@ -97,7 +84,6 @@ class TransFunction {
         }
         return country;
     }
-
 
     /**
      * radius借助HBase补齐
@@ -117,7 +103,7 @@ class TransFunction {
     /**
      * 借助HBase补齐GTP-C信息,解析tunnels信息，优先使用gtp_uplink_teid，其次使用gtp_downlink_teid
      * <p>
-     * "common_tunnels":[{"tunnels_schema_type":"GTP","gtp_uplink_teid":235261261,"gtp_downlink_teid":665547833,"gtp_sgw_ip":"192.56.5.2","gtp_pgw_ip":"192.56.10.20","gtp_sgw_port":2152,"gtp_pgw_port":2152}]
+     * "common_tunnels":[{"tunnels_schema_type":"GTP","gtp_endpoint_a2b_teid":235261261,"gtp_endpoint_b2a_teid":665547833,"gtp_sgw_ip":"192.56.5.2","gtp_pgw_ip":"192.56.10.20","gtp_sgw_port":2152,"gtp_pgw_port":2152}]
      *
      * @param jsonMap     原始日志json
      * @param logValue    上行TEID
