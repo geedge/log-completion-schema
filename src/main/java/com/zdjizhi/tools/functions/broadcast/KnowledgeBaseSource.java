@@ -117,7 +117,7 @@ public class KnowledgeBaseSource extends RichSourceFunction<List<CustomFile>> {
                 }
             });
 
-            while (true){
+            while (isRunning){
                 try {
                     Thread.sleep(10000);
                 } catch (InterruptedException e) {

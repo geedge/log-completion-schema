@@ -61,7 +61,8 @@ public class IpLookup {
             }
 
         } catch (RuntimeException e) {
-            logger.error("IpLookup init data error, please check!");
+            logger.error("IpLookup init data error, please check! message is:" + e.getMessage());
+            e.printStackTrace();
         }
     }
 

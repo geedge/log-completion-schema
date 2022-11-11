@@ -36,8 +36,8 @@ public class LogFlowWriteTopology {
         if (FlowWriteConfig.LOG_NEED_COMPLETE == 1) {
 
             //广播流，只开一个并行度
-            DataStreamSource<List<CustomFile>> customFileDataStreamSource = environment.addSource(new KnowledgeBaseSource())
-                    .setParallelism(1);
+            SingleOutputStreamOperator<List<CustomFile>> customFileDataStreamSource = environment.addSource(new KnowledgeBaseSource())
+                    .setParallelism(1).name("KnowledgeBaseSource");
 
             //用于存储广播数据的state
             MapStateDescriptor<String, List<CustomFile>> descriptor = new MapStateDescriptor<>("descriptor", Types.STRING, Types.LIST(TypeInformation.of(CustomFile.class)));
