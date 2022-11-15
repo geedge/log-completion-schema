@@ -16,6 +16,7 @@ import org.apache.flink.api.common.typeinfo.Types;
 import org.apache.flink.streaming.api.datastream.*;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -36,17 +37,17 @@ public class LogFlowWriteTopology {
         if (FlowWriteConfig.LOG_NEED_COMPLETE == 1) {
 
             //广播流，只开一个并行度
-            SingleOutputStreamOperator<List<CustomFile>> customFileDataStreamSource = environment.addSource(new KnowledgeBaseSource())
+            SingleOutputStreamOperator<Map<String, byte[]>> customFileDataStreamSource = environment.addSource(new KnowledgeBaseSource())
                     .setParallelism(1).name("KnowledgeBaseSource");
 
             //用于存储广播数据的state
-            MapStateDescriptor<String, List<CustomFile>> descriptor = new MapStateDescriptor<>("descriptor", Types.STRING, Types.LIST(TypeInformation.of(CustomFile.class)));
+            MapStateDescriptor<String, Map> descriptor = new MapStateDescriptor<>("descriptor", TypeInformation.of(String.class), TypeInformation.of(Map.class));
 
             //将该流广播赋给缓存
-            BroadcastStream<List<CustomFile>> broadcast = customFileDataStreamSource.broadcast(descriptor);
+            BroadcastStream<Map<String, byte[]>> broadcast = customFileDataStreamSource.broadcast(descriptor);
 
             //业务流连接广播流
-            BroadcastConnectedStream<Map<String, Object>, List<CustomFile>> connect = environment.addSource(KafkaConsumer.timestampDeserializationConsumer())
+            BroadcastConnectedStream<Map<String, Object>, Map<String, byte[]>> connect = environment.addSource(KafkaConsumer.timestampDeserializationConsumer())
                     .setParallelism(FlowWriteConfig.SOURCE_PARALLELISM)
                     .name(FlowWriteConfig.SOURCE_KAFKA_TOPIC)
                     .connect(broadcast);

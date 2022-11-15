@@ -7,6 +7,7 @@ import com.jayway.jsonpath.JsonPath;
 import com.zdjizhi.common.FlowWriteConfig;
 import com.zdjizhi.tools.hbase.HBaseUtils;
 import com.zdjizhi.utils.FormatUtils;
+import com.zdjizhi.utils.IpLookupV2;
 import com.zdjizhi.utils.StringUtil;
 import com.zdjizhi.tools.json.JsonParseUtil;
 import com.zdjizhi.tools.json.JsonPathUtil;
@@ -37,7 +38,7 @@ class TransFunction {
      * @param ip client IP
      * @return ip地址详细信息
      */
-    static String getGeoIpDetail(String ip,IpLookup ipLookup) {
+    static String getGeoIpDetail(String ip, IpLookupV2 ipLookup) {
         String detail = "";
         try {
             detail = ipLookup.cityLookupDetail(ip);
@@ -50,30 +51,12 @@ class TransFunction {
     }
 
     /**
-     * 根据ip获取asn信息
-     *
-     * @param ip client/server IP
-     * @return ASN
-     */
-    static String getGeoAsn(String ip,IpLookup ipLookup) {
-        String asn = "";
-        try {
-            asn = ipLookup.asnLookup(ip);
-        } catch (NullPointerException npe) {
-            logger.error("The MMDB file is not loaded or IP is null! " + npe.getMessage());
-        } catch (RuntimeException e) {
-            logger.error("Get IP ASN error! " + e.getMessage());
-        }
-        return asn;
-    }
-
-    /**
      * 根据ip获取country信息
      *
      * @param ip server IP
      * @return 国家
      */
-    static String getGeoIpCountry(String ip,IpLookup ipLookup) {
+    static String getGeoIpCountry(String ip, IpLookupV2 ipLookup) {
         String country = "";
         try {
             country = ipLookup.countryLookup(ip);
@@ -83,6 +66,24 @@ class TransFunction {
             logger.error("Get ServerIP location error! " + e.getMessage());
         }
         return country;
+    }
+
+    /**
+     * 根据ip获取asn信息
+     *
+     * @param ip client/server IP
+     * @return ASN
+     */
+    static String getGeoAsn(String ip, IpLookupV2 ipLookup) {
+        String asn = "";
+        try {
+            asn = ipLookup.asnLookup(ip);
+        } catch (NullPointerException npe) {
+            logger.error("The MMDB file is not loaded or IP is null! " + npe.getMessage());
+        } catch (RuntimeException e) {
+            logger.error("Get IP ASN error! " + e.getMessage());
+        }
+        return asn;
     }
 
     /**

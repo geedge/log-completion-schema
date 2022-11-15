@@ -56,7 +56,7 @@ public class JsonPathTest {
     @Test
     public void getFileMetaTest() {
         Properties properties = new Properties();
-        properties.setProperty(PropertyKeyConst.SERVER_ADDR, "192.168.44.12:8848");
+        properties.setProperty(PropertyKeyConst.SERVER_ADDR, "192.168.44.67:8848");
         properties.setProperty(PropertyKeyConst.NAMESPACE, "public");
         properties.setProperty(PropertyKeyConst.USERNAME, "nacos");
         properties.setProperty(PropertyKeyConst.PASSWORD, "nacos");

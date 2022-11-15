@@ -1,6 +1,7 @@
 package com.zdjizhi.tools.general;
 
 import com.zdjizhi.tools.json.JsonParseUtil;
+import com.zdjizhi.utils.IpLookupV2;
 
 import java.util.Map;
 
@@ -21,7 +22,7 @@ public class TransForm {
      * @param logValue      用到的参数的值
      * @param param         额外的参数的值
      */
-    public static void functionSet(String function, Map<String, Object> jsonMap, String appendToKey, Object appendToValue, Object logValue, String param,IpLookup ipLookup) {
+    public static void functionSet(String function, Map<String, Object> jsonMap, String appendToKey, Object appendToValue, Object logValue, String param,IpLookupV2 ipLookup) {
         switch (function) {
             case "current_timestamp":
                 if (!(appendToValue instanceof Long)) {

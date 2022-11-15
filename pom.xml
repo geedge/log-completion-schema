@@ -6,7 +6,7 @@
 
     <groupId>com.zdjizhi</groupId>
     <artifactId>log-completion-schema</artifactId>
-    <version>20221110-KNOWLEDGEBASE</version>
+    <version>20221115-KNOWLEDGEBASE</version>
 
     <name>log-completion-schema</name>
     <url>http://www.example.com</url>
@@ -15,7 +15,7 @@
         <repository>
             <id>nexus</id>
             <name>Team Nexus Repository</name>
-            <url>http://192.168.40.125:8099/content/groups/public</url>
+            <url>http://192.168.40.153:8099/content/groups/public</url>
         </repository>
 
         <repository>
@@ -33,12 +33,16 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <zookeeper.version>3.4.10</zookeeper.version>
         <flink.version>1.13.1</flink.version>
         <hadoop.version>2.7.1</hadoop.version>
         <kafka.version>1.0.0</kafka.version>
         <hbase.version>2.2.3</hbase.version>
         <nacos.version>1.2.0</nacos.version>
-        <zdjz.tools.version>1.0.8</zdjz.tools.version>
+        <fastjson.version>1.2.70</fastjson.version>
+        <jsonpath.version>2.4.0</jsonpath.version>
+        <hutool.version>5.7.17</hutool.version>
+        <zdjz.tools.version>1.1.1</zdjz.tools.version>
         <scope.type>provided</scope.type>
         <!--<scope.type>compile</scope.type>-->
     </properties>
@@ -133,7 +137,7 @@
         <dependency>
             <groupId>com.alibaba</groupId>
             <artifactId>fastjson</artifactId>
-            <version>1.2.70</version>
+            <version>${fastjson.version}</version>
         </dependency>
 
         <!-- https://mvnrepository.com/artifact/org.apache.flink/flink-core -->
@@ -181,7 +185,7 @@
         <dependency>
             <groupId>org.apache.zookeeper</groupId>
             <artifactId>zookeeper</artifactId>
-            <version>3.4.10</version>
+            <version>${zookeeper.version}</version>
             <exclusions>
                 <exclusion>
                     <artifactId>slf4j-log4j12</artifactId>
@@ -267,13 +271,13 @@
         <dependency>
             <groupId>com.jayway.jsonpath</groupId>
             <artifactId>json-path</artifactId>
-            <version>2.4.0</version>
+            <version>${jsonpath.version}</version>
         </dependency>
 
         <dependency>
             <groupId>cn.hutool</groupId>
             <artifactId>hutool-all</artifactId>
-            <version>5.7.17</version>
+            <version>${hutool.version}</version>
         </dependency>
 
         <dependency>

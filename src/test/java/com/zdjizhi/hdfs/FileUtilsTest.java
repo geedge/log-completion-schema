@@ -27,7 +27,8 @@ public class FileUtilsTest {
         Configuration configuration = new Configuration();
         try {
             //创建fileSystem,用于连接hdfs
-            fileSystem = FileSystem.get(new URI(FlowWriteConfig.HDFS_URI),configuration);
+//            fileSystem = FileSystem.get(new URI(FlowWriteConfig.HDFS_URI),configuration);
+            fileSystem = FileSystem.get(new URI("hdfs://192.168.44.14:9000"),configuration);
         } catch (IOException e) {
             throw new RuntimeException(e);
         } catch (URISyntaxException e) {
@@ -57,7 +58,7 @@ public class FileUtilsTest {
 
     @Test
     public void rename() throws Exception{
-        fileSystem.rename(new Path("/qitest"), new Path("/IPlocation"));
+        fileSystem.rename(new Path("/test"), new Path("/test1"));
     }
 
     @Test

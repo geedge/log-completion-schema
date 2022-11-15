@@ -2,16 +2,15 @@ package com.zdjizhi.tools.functions.map;
 
 import cn.hutool.log.Log;
 import cn.hutool.log.LogFactory;
-import com.zdjizhi.common.CustomFile;
-import com.zdjizhi.tools.general.IpLookup;
+import com.zdjizhi.tools.general.IpLookupUtils;
 import com.zdjizhi.tools.general.TransForm;
 import com.zdjizhi.tools.json.JsonParseUtil;
+import com.zdjizhi.utils.IpLookupV2;
 import com.zdjizhi.utils.JsonMapper;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.functions.co.BroadcastProcessFunction;
 import org.apache.flink.util.Collector;
 
-import java.util.List;
 import java.util.Map;
 
 
@@ -21,16 +20,16 @@ import java.util.Map;
  * @Description:
  * @date 2021/5/2715:01
  */
-public class MapCompleted extends BroadcastProcessFunction<Map<String, Object>, List<CustomFile>, String> {
+public class MapCompleted extends BroadcastProcessFunction<Map<String, Object>, Map<String, byte[]>, String> {
     private static final Log logger = LogFactory.get();
 
-    private static IpLookup ipLookup;
+    private static IpLookupV2 ipLookup;
 
     @Override
     public void open(Configuration parameters) throws Exception {
         super.open(parameters);
-        ipLookup = new IpLookup();
-        ipLookup.loadIpLookup();
+        ipLookup = IpLookupUtils.initIpLookup();
+
     }
 
     @Override
@@ -62,12 +61,9 @@ public class MapCompleted extends BroadcastProcessFunction<Map<String, Object>, 
     }
 
     @Override
-    public void processBroadcastElement(List<CustomFile> customFiles, Context context, Collector<String> out) throws Exception {
+    public void processBroadcastElement(Map<String, byte[]> customFiles, Context context, Collector<String> out) throws Exception {
         if (!customFiles.isEmpty()) {
-            for (CustomFile customFile : customFiles) {
-                logger.info("定位库名称:" + customFile.getFileName() + ",更新文件字节长度:" + customFile.getContent().length);
-                ipLookup.updateIpLookup(customFile.getFileName(), customFile.getContent());
-            }
+            ipLookup = IpLookupUtils.updateIpLookup(customFiles);
         }
     }
 

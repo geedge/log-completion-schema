@@ -22,14 +22,14 @@ import java.net.URISyntaxException;
 public class HdfsFileUtils {
     private static final Log logger = LogFactory.get();
 
-
-    private static HdfsFileUtils hdfsFileUtils;
     private static FileSystem fileSystem;
 
     static {
         if (FlowWriteConfig.FILE_SYSTEM_TYPE.equals(FlowWriteConfig.KNOWLEDGEBASE_FILE_SYSTEM_TYPE)) {
             Configuration configuration = new Configuration();
             try {
+                //指定用户
+                System.setProperty("HADOOP_USER_NAME", "etl");
                 //创建fileSystem,用于连接hdfs
                 fileSystem = FileSystem.get(new URI(FlowWriteConfig.HDFS_URI), configuration);
             } catch (IOException e) {
@@ -45,7 +45,6 @@ public class HdfsFileUtils {
      *
      * @param filePath 文件路径
      * @return 文件
-     * @throws IOException
      */
     public static byte[] downloadFileByBytes(String filePath) {
         try (FSDataInputStream open = fileSystem.open(new Path(filePath))) {
@@ -63,7 +62,6 @@ public class HdfsFileUtils {
      *
      * @param filePath 文件路径
      * @param bytes    文件
-     * @throws IOException
      */
     public static void uploadFileByBytes(String filePath, byte[] bytes) {
         try (FSDataOutputStream fsDataOutputStream = fileSystem.create(new Path(filePath), true)) {

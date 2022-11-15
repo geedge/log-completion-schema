@@ -1,7 +1,6 @@
 package com.zdjizhi.hos;
 
 import cn.hutool.core.io.IoUtil;
-import cn.hutool.http.HttpUtil;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.base.Joiner;
 import com.maxmind.db.CHMCache;
@@ -9,7 +8,6 @@ import com.maxmind.db.Reader;
 import com.zdjizhi.common.CustomFile;
 import com.zdjizhi.common.FlowWriteConfig;
 import com.zdjizhi.tools.http.HttpClientUtils;
-import com.zdjizhi.utils.IpLookupV2;
 import com.zdjizhi.utils.StringUtil;
 import org.apache.http.Header;
 import org.apache.http.message.BasicHeader;
