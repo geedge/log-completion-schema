@@ -9,9 +9,7 @@ import java.util.Properties;
 
 /**
  * @author qidaijie
- * @Package com.zdjizhi.utils.kafka
- * @Description:
- * @date 2021/6/814:04
+ * @version 2021/6/814:04
  */
 public class KafkaProducer {
 

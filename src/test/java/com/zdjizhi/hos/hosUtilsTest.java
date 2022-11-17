@@ -5,9 +5,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.base.Joiner;
 import com.maxmind.db.CHMCache;
 import com.maxmind.db.Reader;
-import com.zdjizhi.common.CustomFile;
 import com.zdjizhi.common.FlowWriteConfig;
-import com.zdjizhi.tools.http.HttpClientUtils;
+import com.zdjizhi.tools.http.HttpClientService;
 import com.zdjizhi.utils.StringUtil;
 import org.apache.http.Header;
 import org.apache.http.message.BasicHeader;
@@ -26,15 +25,18 @@ import java.net.InetAddress;
  * @date 2022/11/713:55
  */
 public class hosUtilsTest {
+
     @Test
     public void downloadToLocalTest() {
         FileOutputStream outputStream = null;
         InputStream inputStream = null;
         try {
-            HttpClientUtils httpClientUtils = new HttpClientUtils();
             Header header = new BasicHeader("token", FlowWriteConfig.HOS_TOKEN);
-            String url = "http://192.168.44.12:9098/hos/knowledge_base_hos_bucket/a69c41bc-c673-46da-a810-f29aa18a3a16-aXBfdjRfYnVpbHRfaW4=.mmdb";
-            inputStream = httpClientUtils.httpGetInputStream(url, 3000, header);
+            String url = "http://192.168.44.67:8186/hos/knowledge_base_hos_bucket/6de70b47-c1d5-4db1-b68a-b63f6d48d210-aXBfdjRfYnVpbHRfaW4=.mmdb";
+
+            HttpClientService httpClientService = new HttpClientService();
+            inputStream = httpClientService.httpGetInputStream(url, 3000, header);
+
             File file = new File(FlowWriteConfig.TOOLS_LIBRARY.concat(File.separator).concat("ip_v4_built_in.mmdb"));
             if (!file.getParentFile().exists()) {
                 file.getParentFile().mkdir();
@@ -52,13 +54,12 @@ public class hosUtilsTest {
 
     @Test
     public void locationTest() {
+        InputStream inputStream = null;
         try {
-            CustomFile customFile = new CustomFile();
-            HttpClientUtils httpClientUtils = new HttpClientUtils();
             Header header = new BasicHeader("token", FlowWriteConfig.HOS_TOKEN);
             String url = "http://192.168.44.12:9098/hos/knowledge_base_hos_bucket/a69c41bc-c673-46da-a810-f29aa18a3a16-aXBfdjRfYnVpbHRfaW4=.mmdb";
-            InputStream inputStream = httpClientUtils.httpGetInputStream(url, 3000, header);
-            customFile.setFileName("ip_v4_built_in.mmdb");
+            HttpClientService httpClientService = new HttpClientService();
+            inputStream = httpClientService.httpGetInputStream(url, 3000, header);
             Reader reader = new Reader(inputStream, new CHMCache());
             InetAddress ipAddress = InetAddress.getByName("114.64.231.114");
             JsonNode jsonNode = reader.get(ipAddress);
@@ -71,18 +72,19 @@ public class hosUtilsTest {
             }
         } catch (IOException | RuntimeException e) {
             e.printStackTrace();
+        } finally {
+            IoUtil.close(inputStream);
         }
     }
 
     @Test
     public void asnTest() {
+        InputStream inputStream = null;
         try {
-            CustomFile customFile = new CustomFile();
-            HttpClientUtils httpClientUtils = new HttpClientUtils();
             Header header = new BasicHeader("token", FlowWriteConfig.HOS_TOKEN);
             String url = "http://192.168.44.12:9098/hos/knowledge_base_hos_bucket/1b96764c-59dd-4d6b-8edb-623705f708a5-YXNuX3Y0.mmdb";
-            InputStream inputStream = httpClientUtils.httpGetInputStream(url, 3000, header);
-            customFile.setFileName("asn_v4.mmdb");
+            HttpClientService httpClientService = new HttpClientService();
+            inputStream = httpClientService.httpGetInputStream(url, 3000, header);
             Reader reader = new Reader(inputStream, new CHMCache());
             InetAddress ipAddress = InetAddress.getByName("114.64.231.114");
             JsonNode jsonNode = reader.get(ipAddress);
@@ -93,6 +95,8 @@ public class hosUtilsTest {
             }
         } catch (IOException | RuntimeException e) {
             e.printStackTrace();
+        } finally {
+            IoUtil.close(inputStream);
         }
     }
 

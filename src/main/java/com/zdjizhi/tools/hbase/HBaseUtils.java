@@ -54,7 +54,7 @@ public class HBaseUtils {
     private static void getConnection() {
         try {
             Configuration configuration = HBaseConfiguration.create();
-            configuration.set("hbase.zookeeper.quorum", FlowWriteConfig.HBASE_ZOOKEEPER_SERVERS);
+            configuration.set("hbase.zookeeper.quorum", FlowWriteConfig.ZOOKEEPER_SERVERS);
             configuration.set("hbase.client.retries.number", "1");
             configuration.set("hbase.client.pause", "50");
             configuration.set("hbase.rpc.timeout", "3000");

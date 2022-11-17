@@ -12,9 +12,7 @@ import java.util.Map;
 
 /**
  * @author qidaijie
- * @Package com.zdjizhi.utils.hbase
- * @Description:
- * @date 2022/7/1510:12
+ * @version 2022/7/1510:12
  */
 class RadiusRelation {
     private static final Log logger = LogFactory.get();
@@ -90,7 +88,7 @@ class RadiusRelation {
                 } else if (acctStatusType == 2) {
                     if (FlowWriteConfig.DEFAULT_RELATIONSHIP_MODULE.equals(FlowWriteConfig.DATA_RELATIONSHIP_MODEL)) {
                         String vsysId = HBaseUtils.getVsysId(result).trim();
-                        radiusMap.remove(framedIp+vsysId);
+                        radiusMap.remove(framedIp + vsysId);
                     } else {
                         radiusMap.remove(framedIp);
                     }

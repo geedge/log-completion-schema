@@ -7,8 +7,10 @@ import com.alibaba.nacos.api.NacosFactory;
 import com.alibaba.nacos.api.PropertyKeyConst;
 import com.alibaba.nacos.api.config.ConfigService;
 import com.alibaba.nacos.api.exception.NacosException;
+import com.google.common.base.Joiner;
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
+import com.zdjizhi.common.FlowWriteConfig;
 import com.zdjizhi.tools.json.JsonPathUtil;
 import org.junit.Test;
 
@@ -56,7 +58,7 @@ public class JsonPathTest {
     @Test
     public void getFileMetaTest() {
         Properties properties = new Properties();
-        properties.setProperty(PropertyKeyConst.SERVER_ADDR, "192.168.44.67:8848");
+        properties.setProperty(PropertyKeyConst.SERVER_ADDR, "192.168.44.12:8848");
         properties.setProperty(PropertyKeyConst.NAMESPACE, "public");
         properties.setProperty(PropertyKeyConst.USERNAME, "nacos");
         properties.setProperty(PropertyKeyConst.PASSWORD, "nacos");
@@ -64,12 +66,16 @@ public class JsonPathTest {
         try {
             configService = NacosFactory.createConfigService(properties);
             String message = configService.getConfig("knowledge_base.json", "DEFAULT_GROUP", 5000);
-            ArrayList<Object> read = JsonPath.parse(message).read("$.[?(@.version=='latest' && @.name in ['ip_v4_built_in','ip_v6_built_in','ip_v4_user_defined','ip_v6_user_defined','asn_v4','asn_v6'])].['name','sha256','format','path']");
+            ArrayList<Object> read = JsonPath.parse(message).read("$.[?(@.version=='latest' && @.name in ['ip_v4_built_in','ip_v6_built_in','ip_v4_user_defined','ip_v6_user_defined','asn_v4','asn_v6'])].['name','sha256','format','path','size']");
             if (read.size() >= 1) {
                 for (Object metadata : read) {
-                    System.out.println(metadata.toString());
                     JSONObject knowledgeJson = new JSONObject(metadata, false, true);
-                    System.out.println("fileName:" + knowledgeJson.getStr("name") + "." + knowledgeJson.getStr("format") + " ---- filePath:" + knowledgeJson.getStr("path") + "\n");
+                    String fileName = Joiner.on(FlowWriteConfig.LOCATION_SEPARATOR).useForNull("").join(knowledgeJson.getStr("name"),
+                            knowledgeJson.getStr("format"));
+                    String sha256 = knowledgeJson.getStr("sha256");
+                    String size = knowledgeJson.getStr("size");
+                    String filePath = knowledgeJson.getStr("path");
+                    logger.info("name:{},size:{},sha256:{},path:{}",fileName,size,sha256,filePath);
                 }
             }
         } catch (NacosException e) {

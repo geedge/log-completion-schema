@@ -1,8 +1,9 @@
-package com.zdjizhi.tools.hdfs;
+package com.zdjizhi.tools.hadoop;
 
 import cn.hutool.log.Log;
 import cn.hutool.log.LogFactory;
 import com.zdjizhi.common.FlowWriteConfig;
+import com.zdjizhi.utils.StringUtil;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
@@ -10,31 +11,40 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
 import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
 
 /**
  * @author qidaijie
- * @Package com.zdjizhi.tools.hdfs
- * @Description:
- * @date 2022/11/217:57
+ * @version 2022/11/2 17:57
  */
-public class HdfsFileUtils {
+public class HadoopUtils {
     private static final Log logger = LogFactory.get();
 
     private static FileSystem fileSystem;
 
+    /**
+     * 创建hdfs连接
+     */
     static {
         if (FlowWriteConfig.FILE_SYSTEM_TYPE.equals(FlowWriteConfig.KNOWLEDGEBASE_FILE_SYSTEM_TYPE)) {
             Configuration configuration = new Configuration();
             try {
                 //指定用户
                 System.setProperty("HADOOP_USER_NAME", "etl");
+                //配置hdfs相关信息
+                configuration.set("fs.defaultFS", "hdfs://ns1");
+                configuration.set("hadoop.proxyuser.root.hosts", "*");
+                configuration.set("hadoop.proxyuser.root.groups", "*");
+                configuration.set("ha.zookeeper.quorum", FlowWriteConfig.HDFS_ZOOKEEPER_SERVERS);
+                configuration.set("dfs.nameservices", "ns1");
+                configuration.set("dfs.ha.namenodes.ns1", "nn1,nn2");
+                String[] servers = StringUtil.split(FlowWriteConfig.HDFS_SERVERS, FlowWriteConfig.FORMAT_SPLITTER);
+                configuration.set("dfs.namenode.rpc-address.ns1.nn1", servers[0]);
+                configuration.set("dfs.namenode.rpc-address.ns1.nn2", servers[1]);
+                configuration.set("dfs.client.failover.proxy.provider.ns1", "org.apache.hadoop.hdfs.server.namenode.ha.ConfiguredFailoverProxyProvider");
                 //创建fileSystem,用于连接hdfs
-                fileSystem = FileSystem.get(new URI(FlowWriteConfig.HDFS_URI), configuration);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            } catch (URISyntaxException e) {
+                fileSystem = FileSystem.get(configuration);
+            } catch (IOException | RuntimeException e) {
+                logger.error("Failed to create HDFS connection. message is: " + e.getMessage());
                 e.printStackTrace();
             }
         }
@@ -66,6 +76,7 @@ public class HdfsFileUtils {
     public static void uploadFileByBytes(String filePath, byte[] bytes) {
         try (FSDataOutputStream fsDataOutputStream = fileSystem.create(new Path(filePath), true)) {
             fsDataOutputStream.write(bytes);
+//            fsDataOutputStream.flush();
         } catch (RuntimeException e) {
             logger.error("Uploading files to the HDFS is abnormal. Message is :" + e.getMessage());
         } catch (IOException e) {

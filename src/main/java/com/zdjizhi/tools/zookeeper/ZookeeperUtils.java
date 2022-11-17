@@ -13,9 +13,7 @@ import java.util.concurrent.CountDownLatch;
 
 /**
  * @author qidaijie
- * @Package cn.ac.iie.utils.zookeeper
- * @Description:
- * @date 2020/11/1411:28
+ * @version 2020/11/1411:28
  */
 public class ZookeeperUtils implements Watcher {
     private static final Log logger = LogFactory.get();

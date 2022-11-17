@@ -9,9 +9,7 @@ import java.util.Map;
 
 /**
  * @author qidaijie
- * @Package PACKAGE_NAME
- * @Description:
- * @date 2021/7/1217:34
+ * @version 2021/7/1217:34
  */
 public class JsonTypeUtil {
     /**

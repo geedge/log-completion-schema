@@ -10,9 +10,7 @@ import java.util.ArrayList;
 
 /**
  * @author qidaijie
- * @Package com.zdjizhi.utils.json
- * @Description:
- * @date 2022/7/1817:19
+ * @version 2022/7/1817:19
  */
 public class JsonPathUtil {
     private static final Log logger = LogFactory.get();

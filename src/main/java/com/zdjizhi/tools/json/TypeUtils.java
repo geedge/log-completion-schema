@@ -8,9 +8,7 @@ import com.zdjizhi.utils.StringUtil;
 
 /**
  * @author qidaijie
- * @Package PACKAGE_NAME
- * @Description:
- * @date 2021/7/1218:20
+ * @version 2021/7/1218:20
  */
 public class TypeUtils {
     private static final Log logger = LogFactory.get();

@@ -21,7 +21,7 @@ import java.util.Map;
 /**
  * @author qidaijie
  */
-class TransFunction {
+class TransFunctions {
     private static final Log logger = LogFactory.get();
 
     /**

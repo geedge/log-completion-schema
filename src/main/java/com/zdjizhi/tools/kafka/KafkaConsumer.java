@@ -10,9 +10,7 @@ import java.util.Properties;
 
 /**
  * @author qidaijie
- * @Package com.zdjizhi.utils.kafka
- * @Description:
- * @date 2021/6/813:54
+ * @version 2021/6/813:54
  */
 public class KafkaConsumer {
     private static Properties createConsumerConfig() {

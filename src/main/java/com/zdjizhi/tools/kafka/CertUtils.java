@@ -7,9 +7,7 @@ import java.util.Properties;
 
 /**
  * @author qidaijie
- * @Package com.zdjizhi.utils.kafka
- * @Description:
- * @date 2021/9/610:37
+ * @version 2021/9/610:37
  */
 class CertUtils {
     /**

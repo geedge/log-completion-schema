@@ -2,7 +2,6 @@ package com.zdjizhi.topology;
 
 import cn.hutool.log.Log;
 import cn.hutool.log.LogFactory;
-import com.zdjizhi.common.CustomFile;
 import com.zdjizhi.common.FlowWriteConfig;
 import com.zdjizhi.tools.functions.map.MapCompleted;
 import com.zdjizhi.tools.functions.map.TypeMapCompleted;
@@ -12,19 +11,14 @@ import com.zdjizhi.tools.kafka.KafkaConsumer;
 import com.zdjizhi.tools.kafka.KafkaProducer;
 import org.apache.flink.api.common.state.MapStateDescriptor;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
-import org.apache.flink.api.common.typeinfo.Types;
 import org.apache.flink.streaming.api.datastream.*;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
  * @author qidaijie
- * @Package com.zdjizhi.topology
- * @Description:
- * @date 2021/5/2016:42
+ * @version 2021/5/2016:42
  */
 public class LogFlowWriteTopology {
     private static final Log logger = LogFactory.get();

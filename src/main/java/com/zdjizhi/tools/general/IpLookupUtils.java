@@ -4,7 +4,7 @@ import cn.hutool.core.io.file.FileReader;
 import cn.hutool.log.Log;
 import cn.hutool.log.LogFactory;
 import com.zdjizhi.common.FlowWriteConfig;
-import com.zdjizhi.tools.hdfs.HdfsFileUtils;
+import com.zdjizhi.tools.hadoop.HadoopUtils;
 import com.zdjizhi.utils.IpLookupV2;
 import org.apache.commons.io.IOUtils;
 
@@ -12,6 +12,10 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.Map;
 
+/**
+ * @author qidaijie
+ * @version 2022/11/16 15:23
+ */
 public class IpLookupUtils {
     private static final Log logger = LogFactory.get();
 
@@ -45,12 +49,16 @@ public class IpLookupUtils {
     public static IpLookupV2 updateIpLookup(Map<String, byte[]> knowledgeFileCache) {
         IpLookupV2 ipLookupV2 = null;
         try {
+            for (String key : knowledgeFileCache.keySet()) {
+                logger.error("当前更新的{}文件字节大小{}", key, knowledgeFileCache.get(key).length);
+            }
+
             ipLookupV2 = new IpLookupV2.Builder(false)
                     .loadDataFileV4(new ByteArrayInputStream(knowledgeFileCache.get("ip_v4_built_in.mmdb")))
                     .loadDataFileV6(new ByteArrayInputStream(knowledgeFileCache.get("ip_v6_built_in.mmdb")))
                     .loadDataFilePrivateV4(new ByteArrayInputStream(knowledgeFileCache.get("ip_v4_user_defined.mmdb")))
                     .loadDataFilePrivateV6(new ByteArrayInputStream(knowledgeFileCache.get("ip_v6_user_defined.mmdb")))
-                    .loadAsnDataFile(new ByteArrayInputStream(knowledgeFileCache.get("asn_v4.mmdb")))
+                    .loadAsnDataFileV4(new ByteArrayInputStream(knowledgeFileCache.get("asn_v4.mmdb")))
                     .loadAsnDataFileV6(new ByteArrayInputStream(knowledgeFileCache.get("asn_v6.mmdb")))
                     .build();
         } catch (RuntimeException e) {
@@ -69,16 +77,12 @@ public class IpLookupUtils {
     private static InputStream getFileInputStream(String name) {
         InputStream inputStream = null;
         try {
-            if (FlowWriteConfig.FILE_SYSTEM_TYPE.equals(FlowWriteConfig.KNOWLEDGEBASE_FILE_SYSTEM_TYPE)) {
-                byte[] fileBytes = HdfsFileUtils.downloadFileByBytes(FlowWriteConfig.KNOWLEDGEBASE_LIBRARY + name);
-                if (fileBytes != null) {
-                    inputStream = new ByteArrayInputStream(fileBytes);
-                }
-            } else {
-                byte[] fileBytes = new FileReader(FlowWriteConfig.KNOWLEDGEBASE_LIBRARY + name).readBytes();
-                if (fileBytes != null) {
-                    inputStream = new ByteArrayInputStream(fileBytes);
-                }
+            byte[] fileBytes = FlowWriteConfig.FILE_SYSTEM_TYPE.equals(FlowWriteConfig.KNOWLEDGEBASE_FILE_SYSTEM_TYPE) ?
+                    HadoopUtils.downloadFileByBytes(FlowWriteConfig.KNOWLEDGEBASE_LIBRARY + name) :
+                    new FileReader(FlowWriteConfig.KNOWLEDGEBASE_LIBRARY + name).readBytes();
+
+            if (fileBytes != null) {
+                inputStream = new ByteArrayInputStream(fileBytes);
             }
         } catch (RuntimeException e) {
             logger.error("IpLookupUtils download MMDB files error, message is:" + e.getMessage());

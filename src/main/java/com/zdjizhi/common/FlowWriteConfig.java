@@ -92,13 +92,14 @@ public class FlowWriteConfig {
     /**
      * HDFS
      */
-    public static final String HDFS_URI = FlowWriteConfigurations.getStringProperty(0, "hdfs.uri");
+    public static final String HDFS_SERVERS = FlowWriteConfigurations.getStringProperty(0, "hdfs.servers");
     public static final String KNOWLEDGEBASE_FILE_SYSTEM_TYPE = FlowWriteConfigurations.getStringProperty(0, "knowledgebase.file.system.type");
+    public static final String HDFS_ZOOKEEPER_SERVERS = FlowWriteConfigurations.getStringProperty(0, "hdfs.zookeeper.servers");
 
     /**
      * HOS
      */
-    public static final String HOS_TOKEN = FlowWriteConfigurations.getStringProperty(0, "hos.token");
+    public static final String HOS_TOKEN = encryptor.decrypt(FlowWriteConfigurations.getStringProperty(0, "hos.token"));
 
     /**
      * HTTP
@@ -149,6 +150,5 @@ public class FlowWriteConfig {
     public static final String ZOOKEEPER_SERVERS = FlowWriteConfigurations.getStringProperty(0, "zookeeper.servers");
     public static final String TOOLS_LIBRARY = FlowWriteConfigurations.getStringProperty(0, "tools.library");
     public static final String KNOWLEDGEBASE_LIBRARY = FlowWriteConfigurations.getStringProperty(0, "knowledgebase.library");
-    public static final String HBASE_ZOOKEEPER_SERVERS = FlowWriteConfigurations.getStringProperty(0, "hbase.zookeeper.servers");
 
 }

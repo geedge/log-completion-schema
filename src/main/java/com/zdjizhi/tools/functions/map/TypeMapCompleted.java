@@ -16,9 +16,7 @@ import java.util.Map;
 
 /**
  * @author qidaijie
- * @Package com.zdjizhi.utils.functions
- * @Description:
- * @date 2021/5/2715:01
+ * @version 2021/5/27 15:01
  */
 public class TypeMapCompleted extends BroadcastProcessFunction<Map<String, Object>, Map<String, byte[]>, String> {
     private static final Log logger = LogFactory.get();
@@ -29,31 +27,17 @@ public class TypeMapCompleted extends BroadcastProcessFunction<Map<String, Objec
     public void open(Configuration parameters) throws Exception {
         super.open(parameters);
         ipLookup = IpLookupUtils.initIpLookup();
-
     }
 
     @Override
     public void processElement(Map<String, Object> value, ReadOnlyContext readOnlyContext, Collector<String> out) throws Exception {
         try {
             Map<String, Object> jsonMap = JsonParseUtil.typeTransform(value);
-            for (String[] strings : JsonParseUtil.getJobList()) {
-                //该日志字段的值
-                Object logValue = JsonParseUtil.getValue(jsonMap, strings[0]);
-                //结果值映射到的日志字段key
-                String appendToKey = strings[1];
-                //匹配操作函数的字段
-                String function = strings[2];
-                //额外的参数的值
-                String param = strings[3];
-
-                //结果值映射到的日志字段原始value
-                Object appendToValue = JsonParseUtil.getValue(jsonMap, appendToKey);
-
-                TransForm.functionSet(function, jsonMap, appendToKey, appendToValue, logValue, param, ipLookup);
+            TransForm.cleanLog(jsonMap, ipLookup);
+            String result = JsonMapper.toJsonString(jsonMap);
+            if (result != null) {
+                out.collect(result);
             }
-
-            out.collect(JsonMapper.toJsonString(jsonMap));
-
         } catch (RuntimeException e) {
             logger.error("TransForm logs failed( The field type is verified ),The exception is :" + e);
             e.printStackTrace();
@@ -61,9 +45,9 @@ public class TypeMapCompleted extends BroadcastProcessFunction<Map<String, Objec
     }
 
     @Override
-    public void processBroadcastElement(Map<String, byte[]> customFiles, Context context, Collector<String> out) throws Exception {
-        if (!customFiles.isEmpty()) {
-            ipLookup = IpLookupUtils.updateIpLookup(customFiles);
+    public void processBroadcastElement(Map<String, byte[]> knowledgeFileCache, Context context, Collector<String> out) throws Exception {
+        if (!knowledgeFileCache.isEmpty()) {
+            ipLookup = IpLookupUtils.updateIpLookup(knowledgeFileCache);
         }
     }
 

@@ -12,9 +12,7 @@ import java.util.Map;
 
 /**
  * @author qidaijie
- * @Package com.zdjizhi.utils.kafka
- * @Description:
- * @date 2022/3/89:42
+ * @version 2022/3/89:42
  */
 public class TimestampDeserializationSchema implements KafkaDeserializationSchema {
     private static final Log logger = LogFactory.get();

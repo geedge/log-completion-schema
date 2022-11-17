@@ -5,9 +5,7 @@ import org.apache.flink.api.common.functions.FilterFunction;
 
 /**
  * @author qidaijie
- * @Package com.zdjizhi.utils.functions
- * @Description:
- * @date 2021/5/2715:01
+ * @version 2021/5/27 15:01
  */
 public class FilterNull implements FilterFunction<String> {
     @Override

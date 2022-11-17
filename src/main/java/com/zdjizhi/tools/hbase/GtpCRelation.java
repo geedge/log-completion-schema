@@ -14,9 +14,7 @@ import java.util.Map;
 
 /**
  * @author qidaijie
- * @Package com.zdjizhi.utils.hbase
- * @Description:
- * @date 2022/7/1510:12
+ * @version 2022/7/1510:12
  */
 class GtpCRelation {
     private static final Log logger = LogFactory.get();

@@ -33,6 +33,8 @@ public class EncryptorTest {
 
         System.out.println("Nacos:\n"+"The username is: "+encryptor.decrypt(nacosUser));
         System.out.println("The pin is: "+encryptor.decrypt(nacosPin));
+
+        System.out.println("The token is: "+encryptor.decrypt("vknRT6U4I739rLIha9CvojM+4uFyXZLEYpO2HZayLnRak1HPW0K2yZ3vnQBA2foo"));
     }
 
 }
