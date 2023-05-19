@@ -33,8 +33,16 @@ public class EncryptorTest {
 
         System.out.println("Nacos:\n"+"The username is: "+encryptor.decrypt(nacosUser));
         System.out.println("The pin is: "+encryptor.decrypt(nacosPin));
+        System.out.println("------------------------------------------------------");
 
-        System.out.println("The token is: "+encryptor.decrypt("vknRT6U4I739rLIha9CvojM+4uFyXZLEYpO2HZayLnRak1HPW0K2yZ3vnQBA2foo"));
+        System.out.println("The decryption result is: "+encryptor.decrypt("vknRT6U4I739rLIha9CvojM+4uFyXZLEYpO2HZayLnRak1HPW0K2yZ3vnQBA2foo"));
+        System.out.println("The decryption result is: "+encryptor.decrypt("SU05WiYTLLrF+cVZ410gJdrfEgxgnYG9RGsI+3dZZq54XFLOXEzOvRuMAvLlBf4k"));
+        System.out.println("The decryption result is: "+encryptor.decrypt("qUA355VopKSx6kwwwXZwqWWEYSu76Slz"));
+        System.out.println("The decryption result is: "+encryptor.decrypt("sJ9iiTeE/7moI2hKn8asMg=="));
+        System.out.println("The decryption result is: "+encryptor.decrypt("63aTpwv2vH0vPikW+3Jjig=="));
+        System.out.println("The decryption result is: "+encryptor.decrypt("iW8ekP1SZC6v/7cfJKAqXXrjApJox+cH"));
+        System.out.println("The decryption result is: "+encryptor.decrypt("TV7Jm4dQCE/LJznp4iTm4ICkBscquv9G"));
+        System.out.println("The decryption result is: "+encryptor.decrypt("LDEb2OekU7iZWiFw6pUYBSozVKP27r1y"));
     }
 
 }

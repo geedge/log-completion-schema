@@ -43,7 +43,7 @@ class TransFunctions {
         try {
             detail = ipLookup.cityLookupDetail(ip);
         } catch (NullPointerException npe) {
-            logger.error("The MMDB file is not loaded or IP is null! " + npe.getMessage());
+            logger.error("The IP Location MMDB file is not loaded or IP is null! " + npe);
         } catch (RuntimeException e) {
             logger.error("Get clientIP location error! " + e.getMessage());
         }
@@ -61,7 +61,7 @@ class TransFunctions {
         try {
             country = ipLookup.countryLookup(ip);
         } catch (NullPointerException npe) {
-            logger.error("The MMDB file is not loaded or IP is null! " + npe.getMessage());
+            logger.error("The IP Location MMDB file is not loaded or IP is null! " + npe);
         } catch (RuntimeException e) {
             logger.error("Get ServerIP location error! " + e.getMessage());
         }
@@ -79,7 +79,7 @@ class TransFunctions {
         try {
             asn = ipLookup.asnLookup(ip);
         } catch (NullPointerException npe) {
-            logger.error("The MMDB file is not loaded or IP is null! " + npe.getMessage());
+            logger.error("The ASN MMDB file is not loaded or IP is null! " + npe);
         } catch (RuntimeException e) {
             logger.error("Get IP ASN error! " + e.getMessage());
         }

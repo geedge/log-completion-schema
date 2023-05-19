@@ -39,7 +39,7 @@
         <kafka.version>1.0.0</kafka.version>
         <hbase.version>2.2.3</hbase.version>
         <nacos.version>1.2.0</nacos.version>
-        <fastjson.version>1.2.70</fastjson.version>
+        <fastjson.version>2.0.32</fastjson.version>
         <jsonpath.version>2.4.0</jsonpath.version>
         <hutool.version>5.7.17</hutool.version>
         <zdjz.tools.version>1.1.1</zdjz.tools.version>

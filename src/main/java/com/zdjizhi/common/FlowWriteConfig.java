@@ -60,8 +60,8 @@ public class FlowWriteConfig {
     public static final String NACOS_SERVER = FlowWriteConfigurations.getStringProperty(0, "nacos.server");
     public static final String NACOS_SCHEMA_NAMESPACE = FlowWriteConfigurations.getStringProperty(0, "nacos.schema.namespace");
     public static final String NACOS_SCHEMA_DATA_ID = FlowWriteConfigurations.getStringProperty(0, "nacos.schema.data.id");
-    public static final String NACOS_KNOWLEDGEBASE_NAMESPACE = FlowWriteConfigurations.getStringProperty(0, "nacos.knowledgebase.namespace");
-    public static final String NACOS_KNOWLEDGEBASE_DATA_ID = FlowWriteConfigurations.getStringProperty(0, "nacos.knowledgebase.data.id");
+    public static final String NACOS_KNOWLEDGEBASE_NAMESPACE = FlowWriteConfigurations.getStringProperty(1, "nacos.knowledgebase.namespace");
+    public static final String NACOS_KNOWLEDGEBASE_DATA_ID = FlowWriteConfigurations.getStringProperty(1, "nacos.knowledgebase.data.id");
     public static final String NACOS_KNOWLEDGEBASE_GROUP = FlowWriteConfigurations.getStringProperty(1, "nacos.knowledgebase.group");
     public static final String NACOS_SCHEMA_GROUP = FlowWriteConfigurations.getStringProperty(1, "nacos.schema.group");
     public static final String NACOS_USERNAME = encryptor.decrypt(FlowWriteConfigurations.getStringProperty(1, "nacos.username"));
@@ -88,13 +88,13 @@ public class FlowWriteConfig {
     public static final Integer HBASE_RADIUS_SCAN_MAX_ROWS = FlowWriteConfigurations.getIntProperty(1, "hbase.radius.scan.max.rows");
     public static final String HBASE_RADIUS_TABLE_NAME = FlowWriteConfigurations.getStringProperty(1, "hbase.radius.table.name");
     public static final String HBASE_GTPC_TABLE_NAME = FlowWriteConfigurations.getStringProperty(1, "hbase.gtpc.table.name");
+    public static final String HBASE_RPC_TIMEOUT = FlowWriteConfigurations.getStringProperty(1, "hbase.rpc.timeout");
 
     /**
      * HDFS
      */
     public static final String HDFS_SERVERS = FlowWriteConfigurations.getStringProperty(0, "hdfs.servers");
     public static final String KNOWLEDGEBASE_FILE_SYSTEM_TYPE = FlowWriteConfigurations.getStringProperty(0, "knowledgebase.file.system.type");
-    public static final String HDFS_ZOOKEEPER_SERVERS = FlowWriteConfigurations.getStringProperty(0, "hdfs.zookeeper.servers");
 
     /**
      * HOS
@@ -108,7 +108,7 @@ public class FlowWriteConfig {
     public static final Integer HTTP_POOL_MAX_PER_ROUTE = FlowWriteConfigurations.getIntProperty(1, "http.pool.max.per.route");
     public static final Integer HTTP_POOL_REQUEST_TIMEOUT = FlowWriteConfigurations.getIntProperty(1, "http.pool.request.timeout");
     public static final Integer HTTP_POOL_CONNECT_TIMEOUT = FlowWriteConfigurations.getIntProperty(1, "http.pool.connect.timeout");
-    public static final Integer HTTP_POOL_RESPONSE_TIMEOUT = FlowWriteConfigurations.getIntProperty(1, "http.pool.response.timeout");
+    public static final Integer HTTP_SOCKET_TIMEOUT = FlowWriteConfigurations.getIntProperty(1, "http.socket.timeout");
 
     /**
      * kafka common

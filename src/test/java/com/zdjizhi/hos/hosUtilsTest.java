@@ -82,11 +82,11 @@ public class hosUtilsTest {
         InputStream inputStream = null;
         try {
             Header header = new BasicHeader("token", FlowWriteConfig.HOS_TOKEN);
-            String url = "http://192.168.44.12:9098/hos/knowledge_base_hos_bucket/1b96764c-59dd-4d6b-8edb-623705f708a5-YXNuX3Y0.mmdb";
+            String url = "http://192.168.44.12:9098/hos/knowledge_base_hos_bucket/95b20b83-e6bd-4d28-85d5-3b4e32da9a3f-aXBfdjRfYnVpbHRfaW4=.mmdb";
             HttpClientService httpClientService = new HttpClientService();
             inputStream = httpClientService.httpGetInputStream(url, 3000, header);
             Reader reader = new Reader(inputStream, new CHMCache());
-            InetAddress ipAddress = InetAddress.getByName("114.64.231.114");
+            InetAddress ipAddress = InetAddress.getByName("23.200.74.224");
             JsonNode jsonNode = reader.get(ipAddress);
             if (jsonNode != null) {
                 System.out.println(StringUtil.setDefaultIfEmpty(jsonNode.get("ASN"), "unkonw").toString());

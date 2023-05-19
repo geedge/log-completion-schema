@@ -55,7 +55,8 @@ public class KafkaConsumer {
                 new SimpleStringSchema(), createConsumerConfig());
 
         //随着checkpoint提交，将offset提交到kafka
-        kafkaConsumer.setCommitOffsetsOnCheckpoints(true);
+//        kafkaConsumer.setCommitOffsetsOnCheckpoints(true);
+        kafkaConsumer.setCommitOffsetsOnCheckpoints(false);
 
         //从消费组当前的offset开始消费
         kafkaConsumer.setStartFromGroupOffsets();

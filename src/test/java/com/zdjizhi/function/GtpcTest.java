@@ -14,7 +14,7 @@ public class GtpcTest {
 
     @Test
     public void gtpcMatch() {
-        String param = "$.[?(@.tunnels_schema_type=='GTP')].gtp_uplink_teid,$.[?(@.tunnels_schema_type=='GTP')].gtp_downlink_teid";
+        String param = "$.[?(@.tunnels_schema_type=='GTP')].gtp_endpoint_a2b_teid,$.[?(@.tunnels_schema_type=='GTP')].gtp_endpoint_b2a_teid";
         String logValue = "[{\"tunnels_schema_type\":\"GTP\",\"gtp_endpoint_a2b_teid\":4129335432,\"gtp_endpoint_b2a_teid\":4129335434,\"gtp_sgw_ip\":\"120.36.3.97\",\"gtp_pgw_ip\":\"43.224.53.100\",\"gtp_sgw_port\":2152,\"gtp_pgw_port\":51454},{\"tunnels_schema_type\":\"ETHERNET\",\"source_mac\":\"80:69:33:ea:a5:57\",\"destination_mac\":\"14:09:dc:df:a3:40\"}]";
         String appendToKey = "common_imsi,common_imei,common_phone_number";
 

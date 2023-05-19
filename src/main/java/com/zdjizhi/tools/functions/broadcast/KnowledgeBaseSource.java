@@ -96,6 +96,7 @@ public class KnowledgeBaseSource extends RichSourceFunction<Map<String, byte[]>>
 
                 @Override
                 public void receiveConfigInfo(String configMsg) {
+                    logger.error("知识库监听调用，返回信息:" + configMsg);
                     if (StringUtil.isNotBlank(configMsg)) {
                         ArrayList<Object> metaList = JsonPath.parse(configMsg).read(KNOWLEDGE_EXPR);
                         if (metaList.size() >= 1) {
@@ -173,7 +174,7 @@ public class KnowledgeBaseSource extends RichSourceFunction<Map<String, byte[]>>
         int retryNum = 0;
         try {
             while (retryNum < TRY_TIMES) {
-                inputStream = httpClientService.httpGetInputStream(filePath, 3000, header);
+                inputStream = httpClientService.httpGetInputStream(filePath, FlowWriteConfig.HTTP_SOCKET_TIMEOUT, header);
                 if (inputStream != null) {
                     byte[] downloadBytes = IOUtils.toByteArray(inputStream);
                     String downloadFileSha256Hex = DigestUtil.sha256Hex(downloadBytes);

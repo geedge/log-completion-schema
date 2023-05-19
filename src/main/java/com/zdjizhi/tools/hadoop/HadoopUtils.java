@@ -34,7 +34,6 @@ public class HadoopUtils {
                 configuration.set("fs.defaultFS", "hdfs://ns1");
                 configuration.set("hadoop.proxyuser.root.hosts", "*");
                 configuration.set("hadoop.proxyuser.root.groups", "*");
-                configuration.set("ha.zookeeper.quorum", FlowWriteConfig.HDFS_ZOOKEEPER_SERVERS);
                 configuration.set("dfs.nameservices", "ns1");
                 configuration.set("dfs.ha.namenodes.ns1", "nn1,nn2");
                 String[] servers = StringUtil.split(FlowWriteConfig.HDFS_SERVERS, FlowWriteConfig.FORMAT_SPLITTER);

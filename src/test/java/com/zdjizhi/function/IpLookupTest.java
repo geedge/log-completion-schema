@@ -13,8 +13,7 @@ import org.apache.http.Header;
 import org.apache.http.message.BasicHeader;
 import org.junit.Test;
 
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.net.InetAddress;
 
 /**
@@ -37,8 +36,8 @@ public class IpLookupTest {
                 .loadAsnDataFileV6(FlowWriteConfig.TOOLS_LIBRARY + "asn_v6.mmdb")
                 .build();
 
-//        String ip = "114.64.231.114";
-        String ip = "1.0.1.221";
+        String ip = "23.200.74.224";
+//        String ip = "1.13.7.45";
         try {
             System.out.println(ipLookup.cityLookup(ip));
             System.out.println(ipLookup.cityLookupDetail(ip));
@@ -47,8 +46,14 @@ public class IpLookupTest {
             System.out.println(ipLookup.administrativeAreaLookupDetail(ip));
             System.out.println(ipLookup.countryLookup(ip));
             System.out.println(ipLookup.locationLookupDetail(ip));
-            System.out.println(ipLookup.asnLookup(ip));
             System.out.println(ipLookup.administrativeAreaLookupDetail(ip));
+            System.out.println(ipLookup.infoLookupToJson(ip));
+
+            //ASN
+            System.out.println(ipLookup.asnLookup(ip));
+            System.out.println(ipLookup.asnLookupInfo(ip));
+            System.out.println(ipLookup.asnLookupDetail(ip));
+            System.out.println(ipLookup.asnLookupOrganization(ip));
 
         } catch (NullPointerException npe) {
             logger.error("The MMDB file is not loaded or IP is null! " + npe.getMessage());
