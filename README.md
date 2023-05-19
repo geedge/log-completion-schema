@@ -42,3 +42,5 @@
 > 根据表达式解析json,使用jsonPath工具类  
 > https://github.com/json-path/JsonPath
 
+## 动态知识库逻辑
+[流程图](https://git.mesalab.cn/bigdata/tsg/flink/log-completion-schema/-/blob/22.11-KNOWLEDGEBASE/images/%E7%9F%A5%E8%AF%86%E5%BA%93%E6%B5%81%E7%A8%8B%E5%9B%BE.png)
