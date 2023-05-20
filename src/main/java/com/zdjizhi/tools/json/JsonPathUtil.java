@@ -2,39 +2,44 @@ package com.zdjizhi.tools.json;
 
 import cn.hutool.log.Log;
 import cn.hutool.log.LogFactory;
-import com.jayway.jsonpath.InvalidPathException;
-import com.jayway.jsonpath.JsonPath;
-import com.zdjizhi.utils.StringUtil;
+import com.alibaba.fastjson2.JSONPath;
+import com.alibaba.fastjson2.JSONReader;
 
-import java.util.ArrayList;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author qidaijie
- * @version 2022/7/1817:19
+ * @Package com.zdjizhi.tools.json
+ * @Description:
+ * @date 2023/5/1917:51
  */
 public class JsonPathUtil {
     private static final Log logger = LogFactory.get();
 
-    /**
-     * 通过 josnPath 解析，返回TEID数据
-     *
-     * @param message json数据
-     * @param expr    解析表达式
-     * @return 返回值
-     */
-    public static String getTeidValue(String message, String expr) {
-        String result = null;
-        try {
-            if (StringUtil.isNotBlank(message) && StringUtil.isNotBlank(expr)) {
-                ArrayList<Object> read = JsonPath.parse(message).read(expr);
-                if (read.size() >= 1) {
-                    result = read.get(0).toString();
-                }
-            }
-        } catch (RuntimeException e) {
-            logger.error("JSONPath parsing json returns Long data exception: " + e);
-        }
+    private static Map<String, JSONPath> jsonPathMap = new ConcurrentHashMap<>(16);
 
-        return result;
+    /**
+     * 根据表达式使用JsonPath解析数据
+     *
+     * @param message json
+     * @param expr    解析表达式
+     * @return 解析结果
+     */
+    public static Object analysis(String message, String expr) {
+        Object flattenResult = "";
+        try {
+            JSONReader parser = JSONReader.of(message);
+            if (jsonPathMap.containsKey(expr)) {
+                flattenResult = jsonPathMap.get(expr).extract(parser);
+            } else {
+                JSONPath jsonPath = JSONPath.of(expr);
+                jsonPathMap.put(expr, jsonPath);
+                flattenResult = jsonPath.extract(parser);
+            }
+        } catch (ClassCastException | ArrayIndexOutOfBoundsException e) {
+            logger.error("The label resolution exception or [expr] analytic expression error" + e.getMessage());
+        }
+        return flattenResult;
     }
 }

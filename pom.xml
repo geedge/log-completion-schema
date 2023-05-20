@@ -6,7 +6,7 @@
 
     <groupId>com.zdjizhi</groupId>
     <artifactId>log-completion-schema</artifactId>
-    <version>221117-KNOWLEDGEBASE</version>
+    <version>230520-FastJson2</version>
 
     <name>log-completion-schema</name>
     <url>http://www.example.com</url>
@@ -268,11 +268,11 @@
             <version>4.5.2</version>
         </dependency>
 
-        <dependency>
-            <groupId>com.jayway.jsonpath</groupId>
-            <artifactId>json-path</artifactId>
-            <version>${jsonpath.version}</version>
-        </dependency>
+        <!--<dependency>-->
+            <!--<groupId>com.jayway.jsonpath</groupId>-->
+            <!--<artifactId>json-path</artifactId>-->
+            <!--<version>${jsonpath.version}</version>-->
+        <!--</dependency>-->
 
         <dependency>
             <groupId>cn.hutool</groupId>

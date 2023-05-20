@@ -54,9 +54,11 @@ public class HttpClientService {
                 public X509Certificate[] getAcceptedIssuers() {
                     return null;
                 }
+
                 @Override
                 public void checkClientTrusted(X509Certificate[] xcs, String str) {
                 }
+
                 @Override
                 public void checkServerTrusted(X509Certificate[] xcs, String str) {
                 }
@@ -85,7 +87,7 @@ public class HttpClientService {
      * @param socketTimeOut 响应超时时间
      * @return Http客户端连接对象
      */
-    public CloseableHttpClient getHttpClient(int socketTimeOut) {
+    private CloseableHttpClient getHttpClient(int socketTimeOut) {
         // 创建Http请求配置参数
         RequestConfig requestConfig = RequestConfig.custom()
                 // 获取连接超时时间
@@ -111,7 +113,7 @@ public class HttpClientService {
             if (exception instanceof SSLHandshakeException) {// 不要重试SSL握手异常
                 return false;
             }
-            if(exception instanceof SocketTimeoutException) {
+            if (exception instanceof SocketTimeoutException) {
                 if (exception.getMessage().contains("Read timed out")) {
                     return false;
                 }

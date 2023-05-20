@@ -1,9 +1,9 @@
-package com.zdjizhi.tools.general;
+package com.zdjizhi.tools.transform;
 
-import com.zdjizhi.tools.json.JsonParseUtil;
+import com.alibaba.fastjson2.JSONObject;
+import com.zdjizhi.tools.json.MetaUtil;
+import com.zdjizhi.tools.transform.impl.TransformFunctionImpl;
 import com.zdjizhi.utils.IpLookupV2;
-
-import java.util.Map;
 
 
 /**
@@ -12,11 +12,12 @@ import java.util.Map;
  * @author qidaijie
  */
 public class TransForm {
+    private static TransformFunctionImpl transformFunction = new TransformFunctionImpl();
 
-    public static void cleanLog(Map<String, Object> jsonMap, IpLookupV2 ipLookup) {
-        for (String[] strings : JsonParseUtil.getJobList()) {
+    public static void transformLog(JSONObject jsonObject, IpLookupV2 ipLookup) {
+        for (String[] strings : MetaUtil.getJobList()) {
             //该日志字段的值
-            Object logValue = JsonParseUtil.getValue(jsonMap, strings[0]);
+            Object logValue = jsonObject.get(strings[0]);
             //结果值映射到的日志字段key
             String appendToKey = strings[1];
             //匹配操作函数的字段
@@ -25,9 +26,9 @@ public class TransForm {
             String param = strings[3];
 
             //结果值映射到的日志字段原始value
-            Object appendToValue = JsonParseUtil.getValue(jsonMap, appendToKey);
+            Object appendToValue = jsonObject.get(appendToKey);
 
-            functionSet(function, jsonMap, appendToKey, appendToValue, logValue, param, ipLookup);
+            functionSet(function, jsonObject, appendToKey, appendToValue, logValue, param, ipLookup);
         }
     }
 
@@ -36,75 +37,76 @@ public class TransForm {
      * 根据schema描述对应字段进行操作的 函数集合
      *
      * @param function      匹配操作函数的字段
-     * @param jsonMap       原始日志解析map
+     * @param jsonObject    原始日志解析map
      * @param appendToKey   需要补全的字段的key
      * @param appendToValue 需要补全的字段的值
      * @param logValue      用到的参数的值
      * @param param         额外的参数的值
      */
-    private static void functionSet(String function, Map<String, Object> jsonMap, String appendToKey, Object appendToValue, Object logValue, String param, IpLookupV2 ipLookup) {
+    private static void functionSet(String function, JSONObject jsonObject, String appendToKey, Object appendToValue, Object logValue, String param, IpLookupV2 ipLookup) {
+
         switch (function) {
             case "current_timestamp":
                 if (!(appendToValue instanceof Long)) {
-                    JsonParseUtil.setValue(jsonMap, appendToKey, TransFunctions.getCurrentTime());
+                    jsonObject.put(appendToKey, transformFunction.getCurrentTime());
                 }
                 break;
             case "snowflake_id":
-                JsonParseUtil.setValue(jsonMap, appendToKey, SnowflakeId.generateId());
+                jsonObject.put(appendToKey, transformFunction.getSnowflakeId());
                 break;
             case "geo_ip_detail":
                 if (logValue != null && appendToValue == null) {
-                    JsonParseUtil.setValue(jsonMap, appendToKey, TransFunctions.getGeoIpDetail(logValue.toString(), ipLookup));
+                    jsonObject.put(appendToKey, transformFunction.getGeoIpDetail(logValue.toString(), ipLookup));
                 }
                 break;
             case "geo_asn":
                 if (logValue != null && appendToValue == null) {
-                    JsonParseUtil.setValue(jsonMap, appendToKey, TransFunctions.getGeoAsn(logValue.toString(), ipLookup));
+                    jsonObject.put(appendToKey, transformFunction.getGeoAsn(logValue.toString(), ipLookup));
                 }
                 break;
             case "geo_ip_country":
                 if (logValue != null && appendToValue == null) {
-                    JsonParseUtil.setValue(jsonMap, appendToKey, TransFunctions.getGeoIpCountry(logValue.toString(), ipLookup));
+                    jsonObject.put(appendToKey, transformFunction.getGeoIpCountry(logValue.toString(), ipLookup));
                 }
                 break;
             case "flattenSpec":
                 if (logValue != null && param != null) {
-                    JsonParseUtil.setValue(jsonMap, appendToKey, TransFunctions.flattenSpec(logValue.toString(), param));
+                    jsonObject.put(appendToKey, transformFunction.flattenSpec(logValue.toString(), param));
                 }
                 break;
             case "if":
                 if (param != null) {
-                    JsonParseUtil.setValue(jsonMap, appendToKey, TransFunctions.condition(jsonMap, param));
+                    jsonObject.put(appendToKey, transformFunction.condition(jsonObject, param));
                 }
                 break;
             case "decode_of_base64":
                 if (logValue != null) {
-                    JsonParseUtil.setValue(jsonMap, appendToKey, TransFunctions.decodeBase64(logValue.toString(), TransFunctions.isJsonValue(jsonMap, param)));
+                    jsonObject.put( appendToKey, transformFunction.decodeBase64(jsonObject, logValue.toString(), param));
                 }
                 break;
             case "sub_domain":
                 if (appendToValue == null && logValue != null) {
-                    JsonParseUtil.setValue(jsonMap, appendToKey, TransFunctions.getTopDomain(logValue.toString()));
+                    jsonObject.put( appendToKey, transformFunction.getTopDomain(logValue.toString()));
                 }
                 break;
             case "radius_match":
                 if (logValue != null) {
-                    JsonParseUtil.setValue(jsonMap, appendToKey, TransFunctions.radiusMatch(jsonMap, logValue.toString()));
+                    jsonObject.put( appendToKey, transformFunction.radiusMatch(jsonObject, logValue.toString()));
                 }
                 break;
             case "gtpc_match":
                 if (logValue != null) {
-                    TransFunctions.gtpcMatch(jsonMap, logValue.toString(), appendToKey, param);
+                    transformFunction.gtpcMatch(jsonObject, logValue.toString(), appendToKey, param);
                 }
                 break;
             case "set_value":
                 if (param != null) {
-                    JsonParseUtil.setValue(jsonMap, appendToKey, param);
+                    transformFunction.setValue(jsonObject, appendToKey, param);
                 }
                 break;
             case "get_value":
                 if (logValue != null) {
-                    JsonParseUtil.setValue(jsonMap, appendToKey, logValue);
+                    transformFunction.getValue(jsonObject, appendToKey, logValue);
                 }
                 break;
             default:

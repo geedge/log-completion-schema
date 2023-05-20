@@ -1,9 +1,9 @@
 package com.zdjizhi.tools.json;
 
-import cn.hutool.json.JSONArray;
-import cn.hutool.json.JSONObject;
 import cn.hutool.log.Log;
 import cn.hutool.log.LogFactory;
+import com.alibaba.fastjson2.JSONArray;
+import com.alibaba.fastjson2.JSONObject;
 import com.alibaba.nacos.api.NacosFactory;
 import com.alibaba.nacos.api.PropertyKeyConst;
 import com.alibaba.nacos.api.config.ConfigService;
@@ -21,9 +21,9 @@ import java.util.concurrent.Executor;
  *
  * @author qidaijie
  */
-public class JsonParseUtil {
+public class MetaUtil {
     private static final Log logger = LogFactory.get();
-    private static Properties propNacos = new Properties();
+    private static Properties schemaProperties = new Properties();
 
     /**
      * 获取需要删除字段的列表
@@ -48,12 +48,12 @@ public class JsonParseUtil {
     private static ArrayList<String[]> jobList;
 
     static {
-        propNacos.setProperty(PropertyKeyConst.SERVER_ADDR, FlowWriteConfig.NACOS_SERVER);
-        propNacos.setProperty(PropertyKeyConst.NAMESPACE, FlowWriteConfig.NACOS_SCHEMA_NAMESPACE);
-        propNacos.setProperty(PropertyKeyConst.USERNAME, FlowWriteConfig.NACOS_USERNAME);
-        propNacos.setProperty(PropertyKeyConst.PASSWORD, FlowWriteConfig.NACOS_PIN);
+        schemaProperties.setProperty(PropertyKeyConst.SERVER_ADDR, FlowWriteConfig.NACOS_SERVER);
+        schemaProperties.setProperty(PropertyKeyConst.NAMESPACE, FlowWriteConfig.NACOS_SCHEMA_NAMESPACE);
+        schemaProperties.setProperty(PropertyKeyConst.USERNAME, FlowWriteConfig.NACOS_USERNAME);
+        schemaProperties.setProperty(PropertyKeyConst.PASSWORD, FlowWriteConfig.NACOS_PIN);
         try {
-            ConfigService configService = NacosFactory.createConfigService(propNacos);
+            ConfigService configService = NacosFactory.createConfigService(schemaProperties);
             String dataId = FlowWriteConfig.NACOS_SCHEMA_DATA_ID;
             String group = FlowWriteConfig.NACOS_SCHEMA_GROUP;
             String schema = configService.getConfig(dataId, group, 5000);
@@ -129,101 +129,51 @@ public class JsonParseUtil {
     }
 
     /**
-     * 获取属性值的方法
-     *
-     * @param jsonMap  原始日志
-     * @param property key
-     * @return 属性的值
-     */
-    public static Object getValue(Map<String, Object> jsonMap, String property) {
-        try {
-            return jsonMap.getOrDefault(property, null);
-        } catch (RuntimeException e) {
-            logger.error("获取json-value异常，异常key：" + property + "异常信息为：" + e);
-            return null;
-        }
-    }
-
-    /**
-     * 更新属性值的方法
-     *
-     * @param jsonMap  原始日志json map
-     * @param property 更新的key
-     * @param value    更新的值
-     */
-    public static void setValue(Map<String, Object> jsonMap, String property, Object value) {
-        try {
-            jsonMap.put(property, value);
-        } catch (RuntimeException e) {
-            logger.error("赋予实体类错误类型数据", e);
-        }
-    }
-
-    /**
      * 类型转换
      *
-     * @param jsonMap 原始日志map
+     * @param jsonObject 原始日志map
      */
-    public static Map<String, Object> typeTransform(Map<String, Object> jsonMap) throws RuntimeException {
-        JsonParseUtil.dropJsonField(jsonMap);
-        JsonParseUtil.setFieldDefault(jsonMap);
-        HashMap<String, Object> tmpMap = new HashMap<>(256);
-        for (String key : jsonMap.keySet()) {
-            if (jsonFieldsMap.containsKey(key)) {
-                String simpleName = jsonFieldsMap.get(key).getSimpleName();
-                switch (simpleName) {
-                    case "String":
-                        tmpMap.put(key, JsonTypeUtil.checkString(jsonMap.get(key)));
-                        break;
-                    case "Integer":
-                        tmpMap.put(key, JsonTypeUtil.getIntValue(jsonMap.get(key)));
-                        break;
-                    case "long":
-                        tmpMap.put(key, JsonTypeUtil.checkLongValue(jsonMap.get(key)));
-                        break;
-                    case "List":
-                        tmpMap.put(key, JsonTypeUtil.checkArray(jsonMap.get(key)));
-                        break;
-                    case "Map":
-                        tmpMap.put(key, JsonTypeUtil.checkObject(jsonMap.get(key)));
-                        break;
-                    case "double":
-                        tmpMap.put(key, JsonTypeUtil.checkDouble(jsonMap.get(key)));
-                        break;
-                    default:
-                        tmpMap.put(key, JsonTypeUtil.checkString(jsonMap.get(key)));
+    public static JSONObject typeTransform(JSONObject jsonObject) throws RuntimeException {
+        dropJsonField(jsonObject);
+        MetaUtil.setFieldDefault(jsonObject);
+
+        for (String schemaFieldName : jsonFieldsMap.keySet()) {
+            if (jsonObject.containsKey(schemaFieldName)) {
+                Object fieldValue = jsonObject.get(schemaFieldName);
+                if (fieldValue != null) {
+                    Class schemaFieldClass = jsonFieldsMap.get(schemaFieldName);
+                    if (fieldValue.getClass() != schemaFieldClass) {
+                        String simpleName = schemaFieldClass.getSimpleName();
+                        DataTypeCheck.typeConverter(jsonObject, schemaFieldName, fieldValue, simpleName);
+                    }
                 }
             }
         }
-        return tmpMap;
-    }
-
-    public static ArrayList<String[]> getJobList() {
-        return jobList;
+        return jsonObject;
     }
 
     /**
      * 删除schema内指定的无效字段（jackson）
      *
-     * @param jsonMap 原始日志
+     * @param jsonObject 原始日志
      */
-    public static void dropJsonField(Map<String, Object> jsonMap) {
+    public static void dropJsonField(JSONObject jsonObject) {
         for (String field : dropList) {
-            jsonMap.remove(field);
+            jsonObject.remove(field);
         }
     }
 
     /**
      * 根据schema内指定的默认值，给数据赋值。
      *
-     * @param jsonMap 原始日志
+     * @param jsonObject 原始日志
      */
-    private static void setFieldDefault(Map<String, Object> jsonMap) {
-        if (defaultFieldsMap.keySet().size() >= 1) {
+    private static void setFieldDefault(JSONObject jsonObject) {
+        if (defaultFieldsMap.keySet().size() > 0) {
             for (String fieldName : defaultFieldsMap.keySet()) {
-                Object logValue = JsonParseUtil.getValue(jsonMap, fieldName);
+                Object logValue = jsonObject.get(fieldName);
                 if (logValue == null) {
-                    jsonMap.put(fieldName, defaultFieldsMap.get(fieldName));
+                    jsonObject.put(fieldName, defaultFieldsMap.get(fieldName));
                 }
             }
         }
@@ -239,18 +189,18 @@ public class JsonParseUtil {
         HashMap<String, Class> map = new HashMap<>(256);
 
         //获取fields，并转化为数组，数组的每个元素都是一个name doc type
-        JSONObject schemaJson = new JSONObject(schema, false, true);
+        JSONObject schemaJson = JSONObject.parseObject(schema);
         JSONArray fields = schemaJson.getJSONArray("fields");
 
         for (Object field : fields) {
             String filedStr = field.toString();
             if (checkKeepField(filedStr)) {
-                JSONObject fieldJson = new JSONObject(filedStr, false, true);
-                String name = fieldJson.getStr("name");
-                String type = fieldJson.getStr("type");
+                JSONObject fieldJson = JSONObject.parseObject(filedStr);
+                String name = fieldJson.getString("name");
+                String type = fieldJson.getString("type");
                 if (type.contains("{")) {
-                    JSONObject types = new JSONObject(type, false, true);
-                    type = types.getStr("type");
+                    JSONObject types = JSONObject.parseObject(type);
+                    type = types.getString("type");
                 }
 
                 if (fieldJson.containsKey("default")) {
@@ -273,12 +223,12 @@ public class JsonParseUtil {
      */
     private static boolean checkKeepField(String message) {
         boolean isKeepField = true;
-        JSONObject fieldJson = new JSONObject(message, false, true);
+        JSONObject fieldJson = JSONObject.parseObject(message);
         boolean hasDoc = fieldJson.containsKey("doc");
         if (hasDoc) {
-            JSONObject doc = new JSONObject(fieldJson.getStr("doc"), false, true);
+            JSONObject doc = JSONObject.parseObject(fieldJson.getString("doc"));
             if (doc.containsKey("visibility")) {
-                String visibility = doc.getStr("visibility");
+                String visibility = doc.getString("visibility");
                 if (FlowWriteConfig.VISIBILITY.equals(visibility)) {
                     isKeepField = false;
                 }
@@ -296,41 +246,41 @@ public class JsonParseUtil {
     private static ArrayList<String[]> getJobListFromHttp(String schema) {
         ArrayList<String[]> list = new ArrayList<>();
 
-        JSONObject schemaJson = new JSONObject(schema, false, true);
+        JSONObject schemaJson = JSONObject.parseObject(schema);
         JSONArray fields = schemaJson.getJSONArray("fields");
         for (Object field : fields) {
-            JSONObject fieldJson = new JSONObject(field, false, true);
+            JSONObject fieldJson = JSONObject.parseObject(field.toString());
             boolean hasDoc = fieldJson.containsKey("doc");
             if (hasDoc) {
-                JSONObject docJson = fieldJson.getJSONObject("doc");
+                JSONObject docJson = JSONObject.parseObject(fieldJson.getString("doc"));
                 boolean hasFormat = docJson.containsKey("format");
                 if (hasFormat) {
-                    String name = fieldJson.getStr("name");
+                    String name = fieldJson.getString("name");
                     JSONArray formatList = docJson.getJSONArray("format");
                     for (Object format : formatList) {
-                        JSONObject formatJson = new JSONObject(format, false, true);
-                        String function = formatJson.getStr("function");
+                        JSONObject formatJson = JSONObject.parseObject(format.toString());
+                        String function = formatJson.getString("function");
                         String appendTo;
                         String params = null;
 
                         if (formatJson.containsKey("appendTo")) {
-                            appendTo = formatJson.getStr("appendTo");
+                            appendTo = formatJson.getString("appendTo");
                         } else {
                             appendTo = name;
                         }
-
                         if (formatJson.containsKey("param")) {
-                            params = formatJson.getStr("param");
+                            params = formatJson.getString("param");
                         }
-
                         list.add(new String[]{name, appendTo, function, params});
-
                     }
                 }
             }
         }
-
         return list;
+    }
+
+    public static ArrayList<String[]> getJobList() {
+        return jobList;
     }
 
     /**

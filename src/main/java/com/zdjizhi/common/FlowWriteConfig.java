@@ -15,8 +15,6 @@ public class FlowWriteConfig {
         encryptor.setPassword("galaxy");
     }
 
-    public static final int IF_PARAM_LENGTH = 3;
-
     /**
      * 定位库默认分隔符
      */

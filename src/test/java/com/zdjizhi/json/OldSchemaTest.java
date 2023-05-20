@@ -12,12 +12,11 @@ import com.zdjizhi.common.FlowWriteConfig;
 import com.zdjizhi.utils.StringUtil;
 import org.junit.Test;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Properties;
+import java.util.*;
 
 /**
  * Applicable to schemas < TSG22.08
+ *
  * @author qidaijie
  * @Package com.zdjizhi.nacos
  * @Description:
@@ -34,7 +33,7 @@ public class OldSchemaTest {
         properties.setProperty(PropertyKeyConst.USERNAME, "nacos");
         properties.setProperty(PropertyKeyConst.PASSWORD, "nacos");
     }
-    
+
 
     @Test
     public void oldSchemaTest() {
@@ -43,11 +42,14 @@ public class OldSchemaTest {
             ConfigService configService = NacosFactory.createConfigService(properties);
             String dataId = "session_record.json";
             String group = "Galaxy";
-            ArrayList<String[]> oldJobList = getOldJobList(configService.getConfig(dataId, group, 5000));
+            String schema = configService.getConfig(dataId, group, 5000);
+
+            ArrayList<String[]> oldJobList = getOldJobList(schema);
 
             for (String[] job : oldJobList) {
                 System.out.println(Arrays.toString(job));
             }
+
         } catch (NacosException e) {
             e.printStackTrace();
         }
@@ -76,7 +78,7 @@ public class OldSchemaTest {
                     Object format = JSON.parseObject(doc.toString()).get("format");
                     JSONObject formatObject = JSON.parseObject(format.toString());
 
-                    String functions = formatObject.get("functions").toString();
+                    String functions = formatObject.get("transform").toString();
                     String appendTo = null;
                     String params = null;
 

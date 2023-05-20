@@ -3,8 +3,9 @@ package com.zdjizhi.tools.kafka;
 import cn.hutool.log.Log;
 import cn.hutool.log.LogFactory;
 import com.zdjizhi.common.FlowWriteConfig;
-import com.zdjizhi.utils.JsonMapper;
+import org.apache.flink.api.common.typeinfo.TypeHint;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
+import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.streaming.connectors.kafka.KafkaDeserializationSchema;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 
@@ -19,7 +20,8 @@ public class TimestampDeserializationSchema implements KafkaDeserializationSchem
 
     @Override
     public TypeInformation getProducedType() {
-        return TypeInformation.of(Map.class);
+        return TypeInformation.of(new TypeHint<Tuple2<String, Long>>() {
+        });
     }
 
     @Override
@@ -29,23 +31,17 @@ public class TimestampDeserializationSchema implements KafkaDeserializationSchem
 
     @Override
     @SuppressWarnings("unchecked")
-    public Map<String, Object> deserialize(ConsumerRecord record) throws Exception {
+    public Tuple2<String, Long> deserialize(ConsumerRecord record) throws Exception {
         if (record != null) {
             try {
                 long timestamp = record.timestamp() / 1000;
                 String value = new String((byte[]) record.value(), FlowWriteConfig.ENCODING);
-                Map<String, Object> json = (Map<String, Object>) JsonMapper.fromJsonString(value, Map.class);
-                if (json != null) {
-                    if (timestamp != 0L) {
-                        json.put("common_ingestion_time", timestamp);
-                    }
-                }
-                return json;
+                return new Tuple2<>(value, timestamp);
             } catch (RuntimeException e) {
                 logger.error("KafkaConsumer Deserialize failed,The exception is : " + e.getMessage());
                 e.printStackTrace();
             }
         }
-        return null;
+        return new Tuple2<>(null, null);
     }
 }

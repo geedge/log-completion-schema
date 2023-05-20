@@ -1,11 +1,12 @@
 package com.zdjizhi.tools.kafka;
 
+import com.alibaba.fastjson2.JSONObject;
 import com.zdjizhi.common.FlowWriteConfig;
 import org.apache.flink.api.common.serialization.SimpleStringSchema;
+import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumer;
 
 
-import java.util.Map;
 import java.util.Properties;
 
 /**
@@ -32,8 +33,8 @@ public class KafkaConsumer {
      * @return kafka logs -> map
      */
     @SuppressWarnings("unchecked")
-    public static FlinkKafkaConsumer<Map<String, Object>> timestampDeserializationConsumer() {
-        FlinkKafkaConsumer<Map<String, Object>> kafkaConsumer = new FlinkKafkaConsumer<>(FlowWriteConfig.SOURCE_KAFKA_TOPIC,
+    public static FlinkKafkaConsumer<Tuple2<String, Long>> timestampDeserializationConsumer() {
+        FlinkKafkaConsumer<Tuple2<String, Long>> kafkaConsumer = new FlinkKafkaConsumer<>(FlowWriteConfig.SOURCE_KAFKA_TOPIC,
                 new TimestampDeserializationSchema(), createConsumerConfig());
 
         //随着checkpoint提交，将offset提交到kafka

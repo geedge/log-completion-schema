@@ -1,20 +1,20 @@
-package com.zdjizhi.tools.functions.broadcast;
+package com.zdjizhi.operator.broadcast;
 
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.io.IoUtil;
 import cn.hutool.core.io.file.FileReader;
 import cn.hutool.crypto.digest.DigestUtil;
-import cn.hutool.json.JSONObject;
 import cn.hutool.log.Log;
 import cn.hutool.log.LogFactory;
+import com.alibaba.fastjson2.*;
 import com.alibaba.nacos.api.NacosFactory;
 import com.alibaba.nacos.api.PropertyKeyConst;
 import com.alibaba.nacos.api.config.ConfigService;
 import com.alibaba.nacos.api.config.listener.Listener;
 import com.alibaba.nacos.api.exception.NacosException;
 import com.google.common.base.Joiner;
-import com.jayway.jsonpath.JsonPath;
 import com.zdjizhi.common.FlowWriteConfig;
+import com.zdjizhi.common.pojo.KnowlegeBaseMeta;
 import com.zdjizhi.tools.hadoop.HadoopUtils;
 import com.zdjizhi.tools.http.HttpClientService;
 import com.zdjizhi.utils.StringUtil;
@@ -37,7 +37,7 @@ public class KnowledgeBaseSource extends RichSourceFunction<Map<String, byte[]>>
     //最大重试次数
     private static final int TRY_TIMES = 3;
     //JSONpath 表达式
-    private static final String KNOWLEDGE_EXPR = "$.[?(@.version=='latest' && @.name in ['ip_v4_built_in','ip_v6_built_in','ip_v4_user_defined','ip_v6_user_defined','asn_v4','asn_v6'])].['name','sha256','format','path']";
+    private static final String KNOWLEDGE_EXPR = "[?(@.version=='latest' && (@.name in ('ip_v4_built_in','ip_v6_built_in','ip_v4_user_defined','ip_v6_user_defined','asn_v4','asn_v6')))]";
     //定位库元数据缓存
     private static HashMap<String, String> knowledgeMetaCache;
     //定位库缓存
@@ -48,6 +48,8 @@ public class KnowledgeBaseSource extends RichSourceFunction<Map<String, byte[]>>
     private ConfigService configService;
     //http header
     private static Header header;
+    //jsonpath
+    private static JSONPath jsonPath;
     //运行状态cancel时置为false
     private boolean isRunning = true;
     //是否下发，默认不发送
@@ -57,6 +59,7 @@ public class KnowledgeBaseSource extends RichSourceFunction<Map<String, byte[]>>
     @Override
     public void open(Configuration parameters) throws Exception {
         super.open(parameters);
+        jsonPath = JSONPath.of(KNOWLEDGE_EXPR);
         //初始化http连接
         httpClientService = new HttpClientService();
         //初始化元数据缓存
@@ -81,8 +84,10 @@ public class KnowledgeBaseSource extends RichSourceFunction<Map<String, byte[]>>
             String group = FlowWriteConfig.NACOS_KNOWLEDGEBASE_GROUP;
             String configMsg = configService.getConfig(dataId, group, 5000);
             if (StringUtil.isNotBlank(configMsg)) {
-                ArrayList<Object> metaList = JsonPath.parse(configMsg).read(KNOWLEDGE_EXPR);
-                loadKnowledge(metaList);
+                String extract = jsonPath.extract(JSONReader.of(configMsg)).toString();
+                if (StringUtil.isNotBlank(extract)) {
+                    loadKnowledge(extract);
+                }
                 if (isSending) {
                     ctx.collect(knowledgeFileCache);
                 }
@@ -98,21 +103,23 @@ public class KnowledgeBaseSource extends RichSourceFunction<Map<String, byte[]>>
                 public void receiveConfigInfo(String configMsg) {
                     logger.error("知识库监听调用，返回信息:" + configMsg);
                     if (StringUtil.isNotBlank(configMsg)) {
-                        ArrayList<Object> metaList = JsonPath.parse(configMsg).read(KNOWLEDGE_EXPR);
-                        if (metaList.size() >= 1) {
-                            for (Object metadata : metaList) {
-                                JSONObject knowledgeJson = new JSONObject(metadata, false, true);
-                                String fileName = Joiner.on(FlowWriteConfig.LOCATION_SEPARATOR).useForNull("").join(knowledgeJson.getStr("name"),
-                                        knowledgeJson.getStr("format"));
-                                String sha256 = knowledgeJson.getStr("sha256");
-                                String filePath = knowledgeJson.getStr("path");
-                                if (!sha256.equals(knowledgeMetaCache.get(fileName))) {
-                                    knowledgeMetaCache.put(fileName, sha256);
-                                    updateKnowledge(fileName, filePath, sha256);
+                        String extract = jsonPath.extract(JSONReader.of(configMsg)).toString();
+                        if (StringUtil.isNotBlank(extract)) {
+                            JSONArray jsonArray = JSON.parseArray(extract);
+                            if (jsonArray.size() >= 1) {
+                                for (int i = 0; i < jsonArray.size(); i++) {
+                                    KnowlegeBaseMeta knowlegeBaseMeta = JSONObject.parseObject(jsonArray.getString(i), KnowlegeBaseMeta.class);
+                                    String fileName = Joiner.on(FlowWriteConfig.LOCATION_SEPARATOR).useForNull("").join(knowlegeBaseMeta.getName(), knowlegeBaseMeta.getFormat());
+                                    String sha256 = knowlegeBaseMeta.getSha256();
+                                    String filePath = knowlegeBaseMeta.getPath();
+                                    if (!sha256.equals(knowledgeMetaCache.get(fileName))) {
+                                        knowledgeMetaCache.put(fileName, sha256);
+                                        updateKnowledge(fileName, filePath, sha256);
+                                    }
                                 }
-                            }
-                            if (isSending) {
-                                ctx.collect(knowledgeFileCache);
+                                if (isSending) {
+                                    ctx.collect(knowledgeFileCache);
+                                }
                             }
                         }
                     }
@@ -134,17 +141,17 @@ public class KnowledgeBaseSource extends RichSourceFunction<Map<String, byte[]>>
     /**
      * 初始化时，获取全部的
      *
-     * @param metaList 元数据
+     * @param extract 元数据
      */
-    private void loadKnowledge(ArrayList<Object> metaList) {
-        if (metaList.size() >= 1) {
-            try {
-                for (Object metadata : metaList) {
-                    JSONObject knowledgeJson = new JSONObject(metadata, false, true);
-                    String fileName = Joiner.on(FlowWriteConfig.LOCATION_SEPARATOR).useForNull("").join(knowledgeJson.getStr("name"),
-                            knowledgeJson.getStr("format"));
-                    String sha256 = knowledgeJson.getStr("sha256");
-                    String filePath = knowledgeJson.getStr("path");
+    private void loadKnowledge(String extract) {
+        JSONArray jsonArray = JSON.parseArray(extract);
+        try {
+            if (jsonArray.size() >= 1) {
+                for (int i = 0; i < jsonArray.size(); i++) {
+                    KnowlegeBaseMeta knowlegeBaseMeta = JSONObject.parseObject(jsonArray.getString(i), KnowlegeBaseMeta.class);
+                    String fileName = Joiner.on(FlowWriteConfig.LOCATION_SEPARATOR).useForNull("").join(knowlegeBaseMeta.getName(), knowlegeBaseMeta.getFormat());
+                    String sha256 = knowlegeBaseMeta.getSha256();
+                    String filePath = knowlegeBaseMeta.getPath();
                     byte[] localFile = getLocalFile(fileName);
                     String localFileSha256Hex = DigestUtil.sha256Hex(localFile);
                     if (sha256.equals(localFileSha256Hex)) {
@@ -156,10 +163,10 @@ public class KnowledgeBaseSource extends RichSourceFunction<Map<String, byte[]>>
                         updateKnowledge(fileName, filePath, sha256);
                     }
                 }
-            } catch (RuntimeException e) {
-                logger.error("初始化知识库缓存出现异常,异常信息为:", e.getMessage());
-                e.printStackTrace();
             }
+        } catch (RuntimeException e) {
+            logger.error("初始化知识库缓存出现异常,异常信息为:", e.getMessage());
+            e.printStackTrace();
         }
     }
 

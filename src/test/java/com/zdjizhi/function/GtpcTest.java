@@ -22,7 +22,7 @@ public class GtpcTest {
             String teid = null;
             String[] exprs = param.split(FlowWriteConfig.FORMAT_SPLITTER);
             for (String expr : exprs) {
-                String value = JsonPathUtil.getTeidValue(logValue, expr);
+                String value = JsonPathUtil.analysis(logValue, expr).toString();
                 if (value != null) {
                     teid = value;
                     break;

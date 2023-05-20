@@ -1,12 +1,14 @@
-package com.zdjizhi.tools.functions.map;
+package com.zdjizhi.operator.map;
 
 import cn.hutool.log.Log;
 import cn.hutool.log.LogFactory;
+import com.alibaba.fastjson2.JSONObject;
 import com.zdjizhi.tools.general.IpLookupUtils;
-import com.zdjizhi.tools.general.TransForm;
-import com.zdjizhi.tools.json.JsonParseUtil;
+import com.zdjizhi.tools.transform.TransForm;
+import com.zdjizhi.tools.json.MetaUtil;
 import com.zdjizhi.utils.IpLookupV2;
 import com.zdjizhi.utils.JsonMapper;
+import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.functions.co.BroadcastProcessFunction;
 import org.apache.flink.util.Collector;
@@ -18,7 +20,7 @@ import java.util.Map;
  * @author qidaijie
  * @version 2021/5/27 15:01
  */
-public class MapCompleted extends BroadcastProcessFunction<Map<String, Object>, Map<String, byte[]>, String> {
+public class MapCompleted extends BroadcastProcessFunction<Tuple2<String, Long>, Map<String, byte[]>, String> {
     private static final Log logger = LogFactory.get();
 
     private static IpLookupV2 ipLookup;
@@ -31,17 +33,19 @@ public class MapCompleted extends BroadcastProcessFunction<Map<String, Object>, 
     }
 
     @Override
-    public void processElement(Map<String, Object> value, ReadOnlyContext readOnlyContext, Collector<String> out) {
+    public void processElement(Tuple2<String, Long> value, ReadOnlyContext readOnlyContext, Collector<String> out) {
+        String message = value.f0;
         try {
-            JsonParseUtil.dropJsonField(value);
-            TransForm.cleanLog(value, ipLookup);
-            String result = JsonMapper.toJsonString(value);
-            if (result != null) {
-                out.collect(result);
+            JSONObject jsonObject = JSONObject.parseObject(message);
+            Long timestamp = value.f1;
+            if (timestamp != 0L) {
+                jsonObject.put("common_ingestion_time", timestamp);
             }
+            MetaUtil.dropJsonField(jsonObject);
+            TransForm.transformLog(jsonObject, ipLookup);
+            out.collect(jsonObject.toJSONString());
         } catch (RuntimeException e) {
-            logger.error("TransForm log failed ( The field type is not verified ),The exception is :" + e);
-            e.printStackTrace();
+            logger.error("TransForm log failed ( The field type is not verified ),The exception is :{}\n The error Message is:{}", e, message);
         }
     }
 
