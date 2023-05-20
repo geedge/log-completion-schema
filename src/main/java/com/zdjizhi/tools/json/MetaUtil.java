@@ -133,7 +133,7 @@ public class MetaUtil {
      *
      * @param jsonObject 原始日志map
      */
-    public static JSONObject typeTransform(JSONObject jsonObject) throws RuntimeException {
+    public static void typeTransform(JSONObject jsonObject) throws RuntimeException {
         dropJsonField(jsonObject);
         MetaUtil.setFieldDefault(jsonObject);
 
@@ -149,11 +149,10 @@ public class MetaUtil {
                 }
             }
         }
-        return jsonObject;
     }
 
     /**
-     * 删除schema内指定的无效字段（jackson）
+     * 删除schema内指定的无效字段
      *
      * @param jsonObject 原始日志
      */
