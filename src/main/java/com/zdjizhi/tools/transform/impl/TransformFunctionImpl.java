@@ -130,9 +130,9 @@ public class TransformFunctionImpl implements TransformFunction {
             String teid = null;
             String[] exprs = param.split(FlowWriteConfig.FORMAT_SPLITTER);
             for (String expr : exprs) {
-                String value = JsonPathUtil.analysis(logValue, expr).toString();
-                if (value != null) {
-                    teid = value;
+                Object result = JsonPathUtil.analysis(logValue, expr);
+                if (result != null) {
+                    teid = result.toString();
                     break;
                 }
             }
@@ -154,6 +154,7 @@ public class TransformFunctionImpl implements TransformFunction {
             }
         } catch (RuntimeException re) {
             logger.error("An exception occurred in teid type conversion or parsing of user information!" + re.getMessage());
+            re.printStackTrace();
         }
     }
 

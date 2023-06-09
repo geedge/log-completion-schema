@@ -56,14 +56,25 @@ public class FlowWriteConfig {
      * Nacos
      */
     public static final String NACOS_SERVER = FlowWriteConfigurations.getStringProperty(0, "nacos.server");
+    public static final String NACOS_USERNAME = encryptor.decrypt(FlowWriteConfigurations.getStringProperty(1, "nacos.username"));
+    public static final String NACOS_PIN = encryptor.decrypt(FlowWriteConfigurations.getStringProperty(1, "nacos.pin"));
+    public static final Integer NACOS_CONNECTION_TIMEOUT = FlowWriteConfigurations.getIntProperty(1, "nacos.connection.timeout");
+
     public static final String NACOS_SCHEMA_NAMESPACE = FlowWriteConfigurations.getStringProperty(0, "nacos.schema.namespace");
     public static final String NACOS_SCHEMA_DATA_ID = FlowWriteConfigurations.getStringProperty(0, "nacos.schema.data.id");
+    public static final String NACOS_SCHEMA_GROUP = FlowWriteConfigurations.getStringProperty(1, "nacos.schema.group");
+
     public static final String NACOS_KNOWLEDGEBASE_NAMESPACE = FlowWriteConfigurations.getStringProperty(1, "nacos.knowledgebase.namespace");
     public static final String NACOS_KNOWLEDGEBASE_DATA_ID = FlowWriteConfigurations.getStringProperty(1, "nacos.knowledgebase.data.id");
     public static final String NACOS_KNOWLEDGEBASE_GROUP = FlowWriteConfigurations.getStringProperty(1, "nacos.knowledgebase.group");
-    public static final String NACOS_SCHEMA_GROUP = FlowWriteConfigurations.getStringProperty(1, "nacos.schema.group");
-    public static final String NACOS_USERNAME = encryptor.decrypt(FlowWriteConfigurations.getStringProperty(1, "nacos.username"));
-    public static final String NACOS_PIN = encryptor.decrypt(FlowWriteConfigurations.getStringProperty(1, "nacos.pin"));
+
+    /**
+     * knowledgebase
+     */
+    public static final String KNOWLEDGEBASE_FILE_STORAGE_PATH = FlowWriteConfigurations.getStringProperty(0, "knowledgebase.file.storage.path");
+    public static final String KNOWLEDGEBASE_FILE_STORAGE_TYPE = FlowWriteConfigurations.getStringProperty(0, "knowledgebase.file.storage.type");
+    public static final String KNOWLEDGEBASE_TYPE_LIST = FlowWriteConfigurations.getStringProperty(0, "knowledgebase.type.list");
+    public static final String KNOWLEDGEBASE_NAME_LIST = FlowWriteConfigurations.getStringProperty(0, "knowledgebase.name.list");
 
     /**
      * System config
@@ -92,12 +103,6 @@ public class FlowWriteConfig {
      * HDFS
      */
     public static final String HDFS_SERVERS = FlowWriteConfigurations.getStringProperty(0, "hdfs.servers");
-    public static final String KNOWLEDGEBASE_FILE_SYSTEM_TYPE = FlowWriteConfigurations.getStringProperty(0, "knowledgebase.file.system.type");
-
-    /**
-     * HOS
-     */
-    public static final String HOS_TOKEN = encryptor.decrypt(FlowWriteConfigurations.getStringProperty(0, "hos.token"));
 
     /**
      * HTTP
@@ -147,6 +152,5 @@ public class FlowWriteConfig {
     public static final String SINK_KAFKA_SERVERS = FlowWriteConfigurations.getStringProperty(0, "sink.kafka.servers");
     public static final String ZOOKEEPER_SERVERS = FlowWriteConfigurations.getStringProperty(0, "zookeeper.servers");
     public static final String TOOLS_LIBRARY = FlowWriteConfigurations.getStringProperty(0, "tools.library");
-    public static final String KNOWLEDGEBASE_LIBRARY = FlowWriteConfigurations.getStringProperty(0, "knowledgebase.library");
 
 }

@@ -1,6 +1,5 @@
 package com.zdjizhi.operator.broadcast;
 
-import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.io.IoUtil;
 import cn.hutool.core.io.file.FileReader;
 import cn.hutool.crypto.digest.DigestUtil;
@@ -21,79 +20,57 @@ import com.zdjizhi.utils.StringUtil;
 import org.apache.commons.io.IOUtils;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.functions.source.RichSourceFunction;
-import org.apache.http.Header;
-import org.apache.http.message.BasicHeader;
 
 import java.io.*;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.Executor;
 
 /**
  * @author qidaijie
  * @version 2022/11/3 10:37
  */
-public class KnowledgeBaseSource extends RichSourceFunction<Map<String, byte[]>> {
+public class KnowledgeBaseSource extends RichSourceFunction<Map<String, String>> {
     private static final Log logger = LogFactory.get();
     //最大重试次数
-    private static final int TRY_TIMES = 3;
-    //JSONpath 表达式
-    private static final String KNOWLEDGE_EXPR = "[?(@.version=='latest' && (@.name in ('ip_v4_built_in','ip_v6_built_in','ip_v4_user_defined','ip_v6_user_defined','asn_v4','asn_v6')))]";
+    private static final int TRY_TIMES = 5;
     //定位库元数据缓存
     private static HashMap<String, String> knowledgeMetaCache;
-    //定位库缓存
-    private static HashMap<String, byte[]> knowledgeFileCache;
+    //定位库更新数据缓存
+    private static HashMap<String, String> knowledgeUpdateCache;
     //http connections
     private static HttpClientService httpClientService;
     //nacos Service
-    private ConfigService configService;
-    //http header
-    private static Header header;
+    private ConfigService nacosConfigService;
     //jsonpath
-    private static JSONPath jsonPath;
+    private JSONPath jsonPath;
     //运行状态cancel时置为false
     private boolean isRunning = true;
-    //是否下发，默认不发送
-    private boolean isSending = false;
 
 
     @Override
     public void open(Configuration parameters) throws Exception {
         super.open(parameters);
-        jsonPath = JSONPath.of(KNOWLEDGE_EXPR);
+        jsonPath = JSONPath.of(getFilterParameter());
         //初始化http连接
         httpClientService = new HttpClientService();
         //初始化元数据缓存
         knowledgeMetaCache = new HashMap<>(16);
-        //初始化定位库缓存
-        knowledgeFileCache = new HashMap<>(16);
-        //token
-        header = new BasicHeader("token", FlowWriteConfig.HOS_TOKEN);
+        //初始化定位库更新数据缓存
+        knowledgeUpdateCache = new HashMap<>(16);
         //连接nacos的配置
-        Properties properties = new Properties();
-        properties.setProperty(PropertyKeyConst.SERVER_ADDR, FlowWriteConfig.NACOS_SERVER);
-        properties.setProperty(PropertyKeyConst.NAMESPACE, FlowWriteConfig.NACOS_KNOWLEDGEBASE_NAMESPACE);
-        properties.setProperty(PropertyKeyConst.USERNAME, FlowWriteConfig.NACOS_USERNAME);
-        properties.setProperty(PropertyKeyConst.PASSWORD, FlowWriteConfig.NACOS_PIN);
-        configService = NacosFactory.createConfigService(properties);
+        createNacosConnection();
+        //初始化
+        initKnowledge();
     }
 
     @Override
-    public void run(SourceContext<Map<String, byte[]>> ctx) {
+    public void run(SourceContext<Map<String, String>> ctx) {
         try {
-            String dataId = FlowWriteConfig.NACOS_KNOWLEDGEBASE_DATA_ID;
-            String group = FlowWriteConfig.NACOS_KNOWLEDGEBASE_GROUP;
-            String configMsg = configService.getConfig(dataId, group, 5000);
-            if (StringUtil.isNotBlank(configMsg)) {
-                String extract = jsonPath.extract(JSONReader.of(configMsg)).toString();
-                if (StringUtil.isNotBlank(extract)) {
-                    loadKnowledge(extract);
-                }
-                if (isSending) {
-                    ctx.collect(knowledgeFileCache);
-                }
-            }
+            sendUpdateCache(ctx);
 
-            configService.addListener(dataId, group, new Listener() {
+            nacosConfigService.addListener(FlowWriteConfig.NACOS_KNOWLEDGEBASE_DATA_ID, FlowWriteConfig.NACOS_KNOWLEDGEBASE_GROUP, new Listener() {
                 @Override
                 public Executor getExecutor() {
                     return null;
@@ -101,72 +78,102 @@ public class KnowledgeBaseSource extends RichSourceFunction<Map<String, byte[]>>
 
                 @Override
                 public void receiveConfigInfo(String configMsg) {
-                    logger.error("知识库监听调用，返回信息:" + configMsg);
                     if (StringUtil.isNotBlank(configMsg)) {
                         String extract = jsonPath.extract(JSONReader.of(configMsg)).toString();
                         if (StringUtil.isNotBlank(extract)) {
                             JSONArray jsonArray = JSON.parseArray(extract);
-                            if (jsonArray.size() >= 1) {
+                            if (jsonArray.size() > 0) {
                                 for (int i = 0; i < jsonArray.size(); i++) {
                                     KnowlegeBaseMeta knowlegeBaseMeta = JSONObject.parseObject(jsonArray.getString(i), KnowlegeBaseMeta.class);
                                     String fileName = Joiner.on(FlowWriteConfig.LOCATION_SEPARATOR).useForNull("").join(knowlegeBaseMeta.getName(), knowlegeBaseMeta.getFormat());
                                     String sha256 = knowlegeBaseMeta.getSha256();
                                     String filePath = knowlegeBaseMeta.getPath();
                                     if (!sha256.equals(knowledgeMetaCache.get(fileName))) {
-                                        knowledgeMetaCache.put(fileName, sha256);
                                         updateKnowledge(fileName, filePath, sha256);
                                     }
                                 }
-                                if (isSending) {
-                                    ctx.collect(knowledgeFileCache);
-                                }
+                                sendUpdateCache(ctx);
                             }
                         }
                     }
                 }
             });
-
-            while (isRunning) {
-                try {
-                    Thread.sleep(5000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
         } catch (NacosException e) {
             logger.error("Get Schema config from Nacos error,The exception message is :" + e.getMessage());
+        }
+
+        while (isRunning) {
+            try {
+                Thread.sleep(10000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+    }
+
+    @Override
+    public void cancel() {
+        this.isRunning = false;
+    }
+
+    private void createNacosConnection() {
+        Properties properties = new Properties();
+        properties.setProperty(PropertyKeyConst.SERVER_ADDR, FlowWriteConfig.NACOS_SERVER);
+        properties.setProperty(PropertyKeyConst.NAMESPACE, FlowWriteConfig.NACOS_KNOWLEDGEBASE_NAMESPACE);
+        properties.setProperty(PropertyKeyConst.USERNAME, FlowWriteConfig.NACOS_USERNAME);
+        properties.setProperty(PropertyKeyConst.PASSWORD, FlowWriteConfig.NACOS_PIN);
+        try {
+            nacosConfigService = NacosFactory.createConfigService(properties);
+        } catch (NacosException e) {
+            logger.error("创建Nacos连接异常，异常信息为:{}", e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    private void sendUpdateCache(SourceContext<Map<String, String>> ctx) {
+        if (!knowledgeUpdateCache.isEmpty()) {
+            ctx.collect(knowledgeUpdateCache);
+            knowledgeUpdateCache.clear();
         }
     }
 
     /**
-     * 初始化时，获取全部的
-     *
-     * @param extract 元数据
+     * 初始化
      */
-    private void loadKnowledge(String extract) {
-        JSONArray jsonArray = JSON.parseArray(extract);
+    private void initKnowledge() {
+        String configMsg = "";
         try {
-            if (jsonArray.size() >= 1) {
-                for (int i = 0; i < jsonArray.size(); i++) {
-                    KnowlegeBaseMeta knowlegeBaseMeta = JSONObject.parseObject(jsonArray.getString(i), KnowlegeBaseMeta.class);
-                    String fileName = Joiner.on(FlowWriteConfig.LOCATION_SEPARATOR).useForNull("").join(knowlegeBaseMeta.getName(), knowlegeBaseMeta.getFormat());
-                    String sha256 = knowlegeBaseMeta.getSha256();
-                    String filePath = knowlegeBaseMeta.getPath();
-                    byte[] localFile = getLocalFile(fileName);
-                    String localFileSha256Hex = DigestUtil.sha256Hex(localFile);
-                    if (sha256.equals(localFileSha256Hex)) {
-                        logger.info("本地文件{}的sha256为:{} ,Nacos内记录为:{} ,sha256相等", fileName, localFileSha256Hex, sha256);
-                        knowledgeMetaCache.put(fileName, sha256);
-                        knowledgeFileCache.put(fileName, localFile);
-                    } else {
-                        logger.info("本地文件{}的sha256为:{} ,Nacos内记录为:{} ,sha256不相等，更新本地文件及缓存", fileName, localFileSha256Hex, sha256);
-                        updateKnowledge(fileName, filePath, sha256);
+            configMsg = nacosConfigService.getConfig(FlowWriteConfig.NACOS_KNOWLEDGEBASE_DATA_ID,
+                    FlowWriteConfig.NACOS_KNOWLEDGEBASE_GROUP,
+                    FlowWriteConfig.NACOS_CONNECTION_TIMEOUT);
+        } catch (NacosException e) {
+            logger.error("从Nacos获取知识库元数据配置文件异常，异常信息为:{}", e.getMessage());
+        }
+
+        if (StringUtil.isNotBlank(configMsg)) {
+            String extract = jsonPath.extract(JSONReader.of(configMsg)).toString();
+            if (StringUtil.isNotBlank(extract)) {
+                JSONArray jsonArray = JSON.parseArray(extract);
+                if (jsonArray.size() > 0) {
+                    for (int i = 0; i < jsonArray.size(); i++) {
+                        KnowlegeBaseMeta knowlegeBaseMeta = JSONObject.parseObject(jsonArray.getString(i), KnowlegeBaseMeta.class);
+                        String fileName = Joiner.on(FlowWriteConfig.LOCATION_SEPARATOR).useForNull("").join(knowlegeBaseMeta.getName(), knowlegeBaseMeta.getFormat());
+                        String sha256 = knowlegeBaseMeta.getSha256();
+                        String filePath = knowlegeBaseMeta.getPath();
+                        byte[] localFile = getLocalFile(fileName);
+                        String localFileSha256 = DigestUtil.sha256Hex(localFile);
+                        if (sha256.equals(localFileSha256)) {
+                            knowledgeMetaCache.put(fileName, sha256);
+                        } else {
+                            logger.info("{}的sha256为：{} ,Nacos记录为：{},sha256不相等开始更新本地文件", fileName, localFileSha256, sha256);
+                            updateKnowledge(fileName, filePath, sha256);
+                        }
                     }
                 }
             }
-        } catch (RuntimeException e) {
-            logger.error("初始化知识库缓存出现异常,异常信息为:", e.getMessage());
-            e.printStackTrace();
+        } else {
+            logger.error("从Nacos获取知识库元数据配置为空，广播流初始化异常。");
         }
     }
 
@@ -181,19 +188,23 @@ public class KnowledgeBaseSource extends RichSourceFunction<Map<String, byte[]>>
         int retryNum = 0;
         try {
             while (retryNum < TRY_TIMES) {
-                inputStream = httpClientService.httpGetInputStream(filePath, FlowWriteConfig.HTTP_SOCKET_TIMEOUT, header);
+                inputStream = httpClientService.httpGetInputStream(filePath, FlowWriteConfig.HTTP_SOCKET_TIMEOUT);
                 if (inputStream != null) {
                     byte[] downloadBytes = IOUtils.toByteArray(inputStream);
-                    String downloadFileSha256Hex = DigestUtil.sha256Hex(downloadBytes);
-                    if (sha256.equals(downloadFileSha256Hex)) {
-                        logger.info("通过HOS下载{}的sha256为:{} ,Nacos内记录为:{} ,sha256相等", fileName, downloadFileSha256Hex, sha256);
-                        knowledgeMetaCache.put(fileName, sha256);
-                        knowledgeFileCache.put(fileName, downloadBytes);
-                        updateLocalFile(fileName);
-                        retryNum = TRY_TIMES;
-                        isSending = true;
+                    String downloadFileSha256 = DigestUtil.sha256Hex(downloadBytes);
+                    if (sha256.equals(downloadFileSha256) && downloadBytes.length > 0) {
+                        boolean updateStatus = updateLocalFile(fileName, downloadBytes);
+                        if (updateStatus) {
+                            knowledgeMetaCache.put(fileName, sha256);
+                            knowledgeUpdateCache.put(fileName, sha256);
+                            retryNum = TRY_TIMES;
+                            logger.info("{}文件更新成功！", fileName);
+                        } else {
+                            logger.info("{}文件更新本地失败，等待重试！", fileName);
+                            retryNum++;
+                        }
                     } else {
-                        logger.error("通过HOS下载{}的sha256为:{} ,Nacos内记录为:{} ,sha256不相等 开始第{}次重试下载文件", fileName, downloadFileSha256Hex, sha256, retryNum);
+                        logger.error("通过HOS下载{}的sha256为:{} ,Nacos内记录为:{} ,sha256不相等 开始第{}次重试下载文件", fileName, downloadFileSha256, sha256, retryNum);
                         retryNum++;
                     }
                 }
@@ -210,52 +221,88 @@ public class KnowledgeBaseSource extends RichSourceFunction<Map<String, byte[]>>
      *
      * @param fileName 文件名
      */
-    private void updateLocalFile(String fileName) {
+    private boolean updateLocalFile(String fileName, byte[] downloadBytes) {
         FileOutputStream outputStream = null;
+        boolean updateStatus = false;
         try {
-            if (FlowWriteConfig.FILE_SYSTEM_TYPE.equals(FlowWriteConfig.KNOWLEDGEBASE_FILE_SYSTEM_TYPE)) {
-                HadoopUtils.uploadFileByBytes(FlowWriteConfig.KNOWLEDGEBASE_LIBRARY + fileName, knowledgeFileCache.get(fileName));
+            String filePath = FlowWriteConfig.KNOWLEDGEBASE_FILE_STORAGE_PATH + fileName;
+            if (FlowWriteConfig.FILE_SYSTEM_TYPE.equals(FlowWriteConfig.KNOWLEDGEBASE_FILE_STORAGE_TYPE)) {
+                HadoopUtils.uploadFileByBytes(filePath, downloadBytes);
+                updateStatus = true;
             } else {
-                FileUtil.mkdir(FlowWriteConfig.KNOWLEDGEBASE_LIBRARY);
-                File file = new File(FlowWriteConfig.KNOWLEDGEBASE_LIBRARY.concat(File.separator).concat(fileName));
+                File file = new File(filePath);
                 outputStream = new FileOutputStream(file);
-                IoUtil.copy(new ByteArrayInputStream(knowledgeFileCache.get(fileName)), outputStream);
+                IoUtil.copy(new ByteArrayInputStream(downloadBytes), outputStream);
+                updateStatus = true;
             }
         } catch (IOException ioe) {
-            logger.error("更新本地文件{}时发生IO异常,异常信息为:", fileName, ioe.getMessage());
+            logger.error("更新本地文件{}时发生IO异常,异常信息为:{}", fileName, ioe.getMessage());
             ioe.printStackTrace();
         } catch (RuntimeException e) {
-            logger.error("更新本地文件{}时发生异常,异常信息为:", fileName, e.getMessage());
+            logger.error("更新本地文件{}时发生异常,异常信息为:{}", fileName, e.getMessage());
             e.printStackTrace();
         } finally {
             IOUtils.closeQuietly(outputStream);
         }
-
+        return updateStatus;
     }
 
     /**
      * 根据不同文件系统获取定位库io流
      *
-     * @param name 文件名
+     * @param fileName 文件名
      * @return 文件io流
      */
-    private static byte[] getLocalFile(String name) {
+    private byte[] getLocalFile(String fileName) {
         byte[] fileBytes = null;
         try {
-            fileBytes = FlowWriteConfig.FILE_SYSTEM_TYPE.equals(FlowWriteConfig.KNOWLEDGEBASE_FILE_SYSTEM_TYPE) ?
-                    HadoopUtils.downloadFileByBytes(FlowWriteConfig.KNOWLEDGEBASE_LIBRARY + name) :
-                    new FileReader(FlowWriteConfig.KNOWLEDGEBASE_LIBRARY + name).readBytes();
-
+            String filePath = FlowWriteConfig.KNOWLEDGEBASE_FILE_STORAGE_PATH + fileName;
+            fileBytes = FlowWriteConfig.FILE_SYSTEM_TYPE.equals(FlowWriteConfig.KNOWLEDGEBASE_FILE_STORAGE_TYPE) ?
+                    HadoopUtils.downloadFileByBytes(filePath) : new FileReader(filePath).readBytes();
         } catch (RuntimeException e) {
-            logger.error("IpLookupUtils download MMDB files error, message is:" + e.getMessage());
+            logger.error("下载本地文件失败，异常信息为:{}", e.getMessage());
             e.printStackTrace();
         }
         return fileBytes;
     }
 
+    /**
+     * 根据配置组合生成知识库元数据过滤参数
+     *
+     * @return 过滤参数
+     */
+    private static String getFilterParameter() {
+        String[] typeList = FlowWriteConfig.KNOWLEDGEBASE_TYPE_LIST.split(",");
+        String[] nameList = FlowWriteConfig.KNOWLEDGEBASE_NAME_LIST.split(",");
+        String expr = "[?(@.version=='latest')]";
 
-    @Override
-    public void cancel() {
-        this.isRunning = false;
+        if (typeList.length > 1) {
+            StringBuilder typeBuilder = new StringBuilder();
+            typeBuilder.append("[?(@.type in (");
+            for (int i = 0; i < typeList.length; i++) {
+                if (i == typeList.length - 1) {
+                    typeBuilder.append("'").append(typeList[i]).append("'))]");
+                } else {
+                    typeBuilder.append("'").append(typeList[i]).append("',");
+                }
+            }
+            expr = expr + typeBuilder.toString();
+        }
+
+        if (nameList.length > 1) {
+            StringBuilder nameBuilder = new StringBuilder();
+            nameBuilder.append("[?(@.name in (");
+            for (int i = 0; i < nameList.length; i++) {
+                if (i == nameList.length - 1) {
+                    nameBuilder.append("'").append(nameList[i]).append("'))]");
+                } else {
+                    nameBuilder.append("'").append(nameList[i]).append("',");
+                }
+            }
+            expr = expr + nameBuilder.toString();
+        }
+
+        return expr;
     }
+
 }

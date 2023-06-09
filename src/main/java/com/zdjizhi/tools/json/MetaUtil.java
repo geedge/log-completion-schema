@@ -56,7 +56,7 @@ public class MetaUtil {
             ConfigService configService = NacosFactory.createConfigService(schemaProperties);
             String dataId = FlowWriteConfig.NACOS_SCHEMA_DATA_ID;
             String group = FlowWriteConfig.NACOS_SCHEMA_GROUP;
-            String schema = configService.getConfig(dataId, group, 5000);
+            String schema = configService.getConfig(dataId, group, FlowWriteConfig.NACOS_CONNECTION_TIMEOUT);
             if (StringUtil.isNotBlank(schema)) {
                 jsonFieldsMap = getFieldsFromSchema(schema);
                 jobList = getJobListFromHttp(schema);
@@ -70,6 +70,7 @@ public class MetaUtil {
                 @Override
                 public void receiveConfigInfo(String configMsg) {
                     if (StringUtil.isNotBlank(configMsg)) {
+                        logger.info("检测到Nacos内Schema发生变化，重新加载Schema。");
                         clearCache();
                         jsonFieldsMap = getFieldsFromSchema(configMsg);
                         jobList = getJobListFromHttp(configMsg);

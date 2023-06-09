@@ -36,8 +36,10 @@ public class IpLookupTest {
                 .loadAsnDataFileV6(FlowWriteConfig.TOOLS_LIBRARY + "asn_v6.mmdb")
                 .build();
 
-        String ip = "23.200.74.224";
-//        String ip = "1.13.7.45";
+
+//        String ip = "23.200.74.224";
+        String ip = "1.13.7.45";
+
         try {
             System.out.println(ipLookup.cityLookup(ip));
             System.out.println(ipLookup.cityLookupDetail(ip));
@@ -62,14 +64,14 @@ public class IpLookupTest {
         }
     }
 
+
     @Test
     public void ipLookupForBytesTest() {
         InputStream inputStream = null;
         try {
-            Header header = new BasicHeader("token", FlowWriteConfig.HOS_TOKEN);
             String url = "http://192.168.44.12:9098/hos/knowledge_base_hos_bucket/a69c41bc-c673-46da-a810-f29aa18a3a16-aXBfdjRfYnVpbHRfaW4=.mmdb";
             HttpClientService httpClientService = new HttpClientService();
-            inputStream = httpClientService.httpGetInputStream(url, 3000, header);
+            inputStream = httpClientService.httpGetInputStream(url, 3000);
             Reader reader = new Reader(inputStream, new CHMCache());
             InetAddress ipAddress = InetAddress.getByName("114.64.231.114");
             JsonNode jsonNode = reader.get(ipAddress);
@@ -90,11 +92,10 @@ public class IpLookupTest {
         String ip = "114.64.231.114";
         try {
             HttpClientService httpClientService = new HttpClientService();
-            Header header = new BasicHeader("token", FlowWriteConfig.HOS_TOKEN);
             String asnUrl = "http://192.168.44.12:9098/hos/knowledge_base_hos_bucket/1b96764c-59dd-4d6b-8edb-623705f708a5-YXNuX3Y0.mmdb";
             String ipv4Url = "http://192.168.44.12:9098/hos/knowledge_base_hos_bucket/24cb6a74-f048-4672-988f-112858427a3b-aXBfdjRfYnVpbHRfaW4=.mmdb";
-            asnInputStream = httpClientService.httpGetInputStream(asnUrl, 3000, header);
-            ipv4InputStream = httpClientService.httpGetInputStream(ipv4Url, 3000, header);
+            asnInputStream = httpClientService.httpGetInputStream(asnUrl, 3000);
+            ipv4InputStream = httpClientService.httpGetInputStream(ipv4Url, 3000);
 
             IpLookupV2 ipLookup = new IpLookupV2.Builder(false)
                     .loadDataFileV4(ipv4InputStream)

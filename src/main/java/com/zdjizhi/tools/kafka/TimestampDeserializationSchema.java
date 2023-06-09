@@ -34,6 +34,7 @@ public class TimestampDeserializationSchema implements KafkaDeserializationSchem
     public Tuple2<String, Long> deserialize(ConsumerRecord record) throws Exception {
         if (record != null) {
             try {
+
                 long timestamp = record.timestamp() / 1000;
                 String value = new String((byte[]) record.value(), FlowWriteConfig.ENCODING);
                 return new Tuple2<>(value, timestamp);

@@ -3,6 +3,8 @@ package com.zdjizhi.operator.map;
 import cn.hutool.log.Log;
 import cn.hutool.log.LogFactory;
 import com.alibaba.fastjson2.JSONObject;
+import com.sun.tools.javac.comp.Flow;
+import com.zdjizhi.common.FlowWriteConfig;
 import com.zdjizhi.tools.general.IpLookupUtils;
 import com.zdjizhi.tools.json.MetaUtil;
 import com.zdjizhi.tools.transform.TransForm;
@@ -19,9 +21,8 @@ import java.util.Map;
  * @author qidaijie
  * @version 2021/5/27 15:01
  */
-public class TypeMapCompleted extends BroadcastProcessFunction<Tuple2<String, Long>, Map<String, byte[]>, String> {
+public class TypeMapCompleted extends BroadcastProcessFunction<Tuple2<String, Long>, Map<String, String>, String> {
     private static final Log logger = LogFactory.get();
-
     private static IpLookupV2 ipLookup;
 
     @Override
@@ -29,6 +30,7 @@ public class TypeMapCompleted extends BroadcastProcessFunction<Tuple2<String, Lo
         super.open(parameters);
         ipLookup = IpLookupUtils.initIpLookup();
     }
+
 
     @Override
     public void processElement(Tuple2<String, Long> value, ReadOnlyContext readOnlyContext, Collector<String> out) throws Exception {
@@ -47,10 +49,11 @@ public class TypeMapCompleted extends BroadcastProcessFunction<Tuple2<String, Lo
         }
     }
 
+
     @Override
-    public void processBroadcastElement(Map<String, byte[]> knowledgeFileCache, Context context, Collector<String> out) throws Exception {
-        if (!knowledgeFileCache.isEmpty()) {
-            ipLookup = IpLookupUtils.updateIpLookup(knowledgeFileCache);
+    public void processBroadcastElement(Map<String, String> knowledgeUpdateCache, Context context, Collector<String> out) throws Exception {
+        if (!knowledgeUpdateCache.isEmpty()) {
+            ipLookup = IpLookupUtils.updateIpLookup(knowledgeUpdateCache);
         }
     }
 

@@ -6,7 +6,7 @@
 
     <groupId>com.zdjizhi</groupId>
     <artifactId>log-completion-schema</artifactId>
-    <version>230520-FastJson2</version>
+    <version>230607-FastJson2</version>
 
     <name>log-completion-schema</name>
     <url>http://www.example.com</url>
@@ -33,6 +33,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <zdjz.tools.version>1.1.3</zdjz.tools.version>
         <zookeeper.version>3.4.10</zookeeper.version>
         <flink.version>1.13.1</flink.version>
         <hadoop.version>2.7.1</hadoop.version>
@@ -40,9 +41,7 @@
         <hbase.version>2.2.3</hbase.version>
         <nacos.version>1.2.0</nacos.version>
         <fastjson.version>2.0.32</fastjson.version>
-        <jsonpath.version>2.4.0</jsonpath.version>
         <hutool.version>5.7.17</hutool.version>
-        <zdjz.tools.version>1.1.1</zdjz.tools.version>
         <scope.type>provided</scope.type>
         <!--<scope.type>compile</scope.type>-->
     </properties>
@@ -267,12 +266,6 @@
             <artifactId>httpclient</artifactId>
             <version>4.5.2</version>
         </dependency>
-
-        <!--<dependency>-->
-            <!--<groupId>com.jayway.jsonpath</groupId>-->
-            <!--<artifactId>json-path</artifactId>-->
-            <!--<version>${jsonpath.version}</version>-->
-        <!--</dependency>-->
 
         <dependency>
             <groupId>cn.hutool</groupId>

@@ -2,19 +2,23 @@ package com.zdjizhi.topology;
 
 import cn.hutool.log.Log;
 import cn.hutool.log.LogFactory;
-import com.alibaba.fastjson2.JSONObject;
 import com.zdjizhi.common.FlowWriteConfig;
+import com.zdjizhi.operator.broadcast.KnowledgeBaseSource;
 import com.zdjizhi.operator.map.MapCompleted;
 import com.zdjizhi.operator.map.TypeMapCompleted;
-import com.zdjizhi.operator.broadcast.KnowledgeBaseSource;
 import com.zdjizhi.operator.filter.FilterNull;
+import com.zdjizhi.tools.general.IpLookupUtils;
 import com.zdjizhi.tools.kafka.KafkaConsumer;
 import com.zdjizhi.tools.kafka.KafkaProducer;
+import com.zdjizhi.utils.IpLookupV2;
 import org.apache.flink.api.common.state.MapStateDescriptor;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.java.tuple.Tuple2;
+import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.datastream.*;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.apache.flink.streaming.api.functions.co.BroadcastProcessFunction;
+import org.apache.flink.util.Collector;
 
 import java.util.Map;
 
@@ -26,6 +30,7 @@ public class LogFlowWriteTopology {
     private static final Log logger = LogFactory.get();
 
     public static void main(String[] args) {
+
         final StreamExecutionEnvironment environment = StreamExecutionEnvironment.getExecutionEnvironment();
 
         //两个输出之间的最大时间 (单位milliseconds)
@@ -33,20 +38,22 @@ public class LogFlowWriteTopology {
         if (FlowWriteConfig.LOG_NEED_COMPLETE == 1) {
 
             //广播流，只开一个并行度
-            SingleOutputStreamOperator<Map<String, byte[]>> customFileDataStreamSource = environment.addSource(new KnowledgeBaseSource())
+            SingleOutputStreamOperator<Map<String, String>> customFileDataStreamSource = environment.addSource(new KnowledgeBaseSource())
                     .setParallelism(1).name("KnowledgeBaseSource");
 
             //用于存储广播数据的state
             MapStateDescriptor<String, Map> descriptor = new MapStateDescriptor<>("descriptor", TypeInformation.of(String.class), TypeInformation.of(Map.class));
 
             //将该流广播赋给缓存
-            BroadcastStream<Map<String, byte[]>> broadcast = customFileDataStreamSource.broadcast(descriptor);
+            BroadcastStream<Map<String, String>> broadcast = customFileDataStreamSource.broadcast(descriptor);
 
-            //业务流连接广播流
-            BroadcastConnectedStream<Tuple2<String, Long>, Map<String, byte[]>> connect = environment.addSource(KafkaConsumer.timestampDeserializationConsumer())
+            //业务流
+            SingleOutputStreamOperator<Tuple2<String, Long>> businessFlow = environment.addSource(KafkaConsumer.timestampDeserializationConsumer())
                     .setParallelism(FlowWriteConfig.SOURCE_PARALLELISM)
-                    .name(FlowWriteConfig.SOURCE_KAFKA_TOPIC)
-                    .connect(broadcast);
+                    .name(FlowWriteConfig.SOURCE_KAFKA_TOPIC);
+
+            //广播流
+            BroadcastConnectedStream<Tuple2<String, Long>, Map<String, String>> connect = businessFlow.connect(broadcast);
 
             //日志清洗
             SingleOutputStreamOperator<String> completed;

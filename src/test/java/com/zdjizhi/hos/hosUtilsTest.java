@@ -31,11 +31,10 @@ public class hosUtilsTest {
         FileOutputStream outputStream = null;
         InputStream inputStream = null;
         try {
-            Header header = new BasicHeader("token", FlowWriteConfig.HOS_TOKEN);
-            String url = "http://192.168.44.67:8186/hos/knowledge_base_hos_bucket/6de70b47-c1d5-4db1-b68a-b63f6d48d210-aXBfdjRfYnVpbHRfaW4=.mmdb";
+            String url = "http://192.168.44.242:9098/hos/knowledge_base_hos_bucket/0773846a-87df-4869-a5b7-815eda384b92-aXBfdjRfYnVpbHRfaW4=.mmdb";
 
             HttpClientService httpClientService = new HttpClientService();
-            inputStream = httpClientService.httpGetInputStream(url, 3000, header);
+            inputStream = httpClientService.httpGetInputStream(url, 3000);
 
             File file = new File(FlowWriteConfig.TOOLS_LIBRARY.concat(File.separator).concat("ip_v4_built_in.mmdb"));
             if (!file.getParentFile().exists()) {
@@ -56,10 +55,10 @@ public class hosUtilsTest {
     public void locationTest() {
         InputStream inputStream = null;
         try {
-            Header header = new BasicHeader("token", FlowWriteConfig.HOS_TOKEN);
-            String url = "http://192.168.44.12:9098/hos/knowledge_base_hos_bucket/a69c41bc-c673-46da-a810-f29aa18a3a16-aXBfdjRfYnVpbHRfaW4=.mmdb";
+//            Header header = new BasicHeader("token", FlowWriteConfig.HOS_TOKEN);
+            String url = "http://192.168.44.12:9098/hos/knowledge_base_hos_bucket/ac0ef83d-f23a-41a0-9c66-51c4e2b4cbc0-aXBfdjRfYnVpbHRfaW4=.mmdb";
             HttpClientService httpClientService = new HttpClientService();
-            inputStream = httpClientService.httpGetInputStream(url, 3000, header);
+            inputStream = httpClientService.httpGetInputStream(url, 3000);
             Reader reader = new Reader(inputStream, new CHMCache());
             InetAddress ipAddress = InetAddress.getByName("114.64.231.114");
             JsonNode jsonNode = reader.get(ipAddress);
@@ -81,10 +80,9 @@ public class hosUtilsTest {
     public void asnTest() {
         InputStream inputStream = null;
         try {
-            Header header = new BasicHeader("token", FlowWriteConfig.HOS_TOKEN);
             String url = "http://192.168.44.12:9098/hos/knowledge_base_hos_bucket/95b20b83-e6bd-4d28-85d5-3b4e32da9a3f-aXBfdjRfYnVpbHRfaW4=.mmdb";
             HttpClientService httpClientService = new HttpClientService();
-            inputStream = httpClientService.httpGetInputStream(url, 3000, header);
+            inputStream = httpClientService.httpGetInputStream(url, 3000);
             Reader reader = new Reader(inputStream, new CHMCache());
             InetAddress ipAddress = InetAddress.getByName("23.200.74.224");
             JsonNode jsonNode = reader.get(ipAddress);
