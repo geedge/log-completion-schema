@@ -1,15 +1,12 @@
-package com.zdjizhi.tools.kafka;
+package com.zdjizhi.tools.connections.kafka;
 
 import cn.hutool.log.Log;
 import cn.hutool.log.LogFactory;
-import com.zdjizhi.common.FlowWriteConfig;
 import org.apache.flink.api.common.typeinfo.TypeHint;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.streaming.connectors.kafka.KafkaDeserializationSchema;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
-
-import java.util.Map;
 
 /**
  * @author qidaijie
@@ -17,6 +14,10 @@ import java.util.Map;
  */
 public class TimestampDeserializationSchema implements KafkaDeserializationSchema {
     private static final Log logger = LogFactory.get();
+    /**
+     * 默认的字符串解析编码
+     */
+    private static final String ENCODING = "UTF8";
 
     @Override
     public TypeInformation getProducedType() {
@@ -36,7 +37,7 @@ public class TimestampDeserializationSchema implements KafkaDeserializationSchem
             try {
 
                 long timestamp = record.timestamp() / 1000;
-                String value = new String((byte[]) record.value(), FlowWriteConfig.ENCODING);
+                String value = new String((byte[]) record.value(), ENCODING);
                 return new Tuple2<>(value, timestamp);
             } catch (RuntimeException e) {
                 logger.error("KafkaConsumer Deserialize failed,The exception is : " + e.getMessage());

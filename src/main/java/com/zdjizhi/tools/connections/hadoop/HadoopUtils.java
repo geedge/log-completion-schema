@@ -1,4 +1,4 @@
-package com.zdjizhi.tools.hadoop;
+package com.zdjizhi.tools.connections.hadoop;
 
 import cn.hutool.log.Log;
 import cn.hutool.log.LogFactory;

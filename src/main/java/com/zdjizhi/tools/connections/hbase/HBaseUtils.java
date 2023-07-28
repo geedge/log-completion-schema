@@ -1,4 +1,4 @@
-package com.zdjizhi.tools.hbase;
+package com.zdjizhi.tools.connections.hbase;
 
 import cn.hutool.log.Log;
 import cn.hutool.log.LogFactory;
@@ -137,7 +137,7 @@ public class HBaseUtils {
      * @return 结果数据
      */
     static String getVsysId(Result result) {
-        byte[] familyBytes = Bytes.toBytes(FlowWriteConfig.COMMON_FAMILY_NAME);
+        byte[] familyBytes = Bytes.toBytes("common");
         byte[] columnBytes = Bytes.toBytes("vsys_id");
         boolean contains = result.containsColumn(familyBytes, columnBytes);
         if (contains) {

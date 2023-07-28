@@ -1,24 +1,33 @@
 package com.zdjizhi.common;
 
 
-import com.zdjizhi.tools.system.FlowWriteConfigurations;
+import cn.hutool.log.Log;
+import cn.hutool.log.LogFactory;
+import com.zdjizhi.tools.general.ConfigurationsUtils;
 import org.jasypt.encryption.pbe.StandardPBEStringEncryptor;
+
+import java.io.IOException;
+import java.util.Properties;
 
 /**
  * @author Administrator
  */
 public class FlowWriteConfig {
+    private static final Log logger = LogFactory.get();
 
     private static StandardPBEStringEncryptor encryptor = new StandardPBEStringEncryptor();
+    private static Properties propDefault = new Properties();
+    private static Properties propService = new Properties();
 
     static {
         encryptor.setPassword("galaxy");
+        try {
+            propService.load(ConfigurationsUtils.class.getClassLoader().getResourceAsStream("service_flow_config.properties"));
+            propDefault.load(ConfigurationsUtils.class.getClassLoader().getResourceAsStream("default_config.properties"));
+        } catch (IOException | RuntimeException e) {
+            logger.error("Loading the configuration file Failed!,The error message is:{}" + e);
+        }
     }
-
-    /**
-     * 定位库默认分隔符
-     */
-    public static final String LOCATION_SEPARATOR = ".";
 
     /**
      * 默认的文件系统标识
@@ -26,131 +35,111 @@ public class FlowWriteConfig {
     public static final String FILE_SYSTEM_TYPE = "hdfs";
 
     /**
-     * 有此标识的字段为失效字段，不计入最终日志字段
-     */
-    public static final String VISIBILITY = "disabled";
-    /**
      * 默认的切分符号
      */
     public static final String FORMAT_SPLITTER = ",";
-    /**
-     * 标识字段为日志字段还是schema指定字段
-     */
-    public static final String IS_JSON_KEY_TAG = "$.";
-    /**
-     * if函数连接分隔符
-     */
-    public static final String IF_CONDITION_SPLITTER = "=";
-    /**
-     * 默认的字符串解析编码
-     */
-    public static final String ENCODING = "UTF8";
 
     public static final String GTPC_FAMILY_NAME = "gtp";
     public static final String RADIUS_FAMILY_NAME = "radius";
-    public static final String COMMON_FAMILY_NAME = "common";
     public static final String DEFAULT_RELATIONSHIP_MODULE = "vsys";
 
 
     /**
      * Nacos
      */
-    public static final String NACOS_SERVER = FlowWriteConfigurations.getStringProperty(0, "nacos.server");
-    public static final String NACOS_USERNAME = encryptor.decrypt(FlowWriteConfigurations.getStringProperty(1, "nacos.username"));
-    public static final String NACOS_PIN = encryptor.decrypt(FlowWriteConfigurations.getStringProperty(1, "nacos.pin"));
-    public static final Integer NACOS_CONNECTION_TIMEOUT = FlowWriteConfigurations.getIntProperty(1, "nacos.connection.timeout");
+    public static final String NACOS_SERVER = ConfigurationsUtils.getStringProperty(propService, "nacos.server");
+    public static final String NACOS_USERNAME = encryptor.decrypt(ConfigurationsUtils.getStringProperty(propDefault, "nacos.username"));
+    public static final String NACOS_PIN = encryptor.decrypt(ConfigurationsUtils.getStringProperty(propDefault, "nacos.pin"));
+    public static final Integer NACOS_CONNECTION_TIMEOUT = ConfigurationsUtils.getIntProperty(propDefault, "nacos.connection.timeout");
 
-    public static final String NACOS_SCHEMA_NAMESPACE = FlowWriteConfigurations.getStringProperty(0, "nacos.schema.namespace");
-    public static final String NACOS_SCHEMA_DATA_ID = FlowWriteConfigurations.getStringProperty(0, "nacos.schema.data.id");
-    public static final String NACOS_SCHEMA_GROUP = FlowWriteConfigurations.getStringProperty(1, "nacos.schema.group");
+    public static final String NACOS_SCHEMA_NAMESPACE = ConfigurationsUtils.getStringProperty(propService, "nacos.schema.namespace");
+    public static final String NACOS_SCHEMA_DATA_ID = ConfigurationsUtils.getStringProperty(propService, "nacos.schema.data.id");
+    public static final String NACOS_SCHEMA_GROUP = ConfigurationsUtils.getStringProperty(propDefault, "nacos.schema.group");
 
-    public static final String NACOS_KNOWLEDGEBASE_NAMESPACE = FlowWriteConfigurations.getStringProperty(1, "nacos.knowledgebase.namespace");
-    public static final String NACOS_KNOWLEDGEBASE_DATA_ID = FlowWriteConfigurations.getStringProperty(1, "nacos.knowledgebase.data.id");
-    public static final String NACOS_KNOWLEDGEBASE_GROUP = FlowWriteConfigurations.getStringProperty(1, "nacos.knowledgebase.group");
+    public static final String NACOS_PUBLIC_NAMESPACE = ConfigurationsUtils.getStringProperty(propDefault, "nacos.public.namespace");
+    public static final String NACOS_PUBLIC_GROUP = ConfigurationsUtils.getStringProperty(propDefault, "nacos.public.group");
+    public static final String NACOS_KNOWLEDGEBASE_DATA_ID = ConfigurationsUtils.getStringProperty(propDefault, "nacos.knowledgebase.data.id");
 
     /**
      * knowledgebase
      */
-    public static final String KNOWLEDGEBASE_FILE_STORAGE_PATH = FlowWriteConfigurations.getStringProperty(0, "knowledgebase.file.storage.path");
-    public static final String KNOWLEDGEBASE_FILE_STORAGE_TYPE = FlowWriteConfigurations.getStringProperty(0, "knowledgebase.file.storage.type");
-    public static final String KNOWLEDGEBASE_TYPE_LIST = FlowWriteConfigurations.getStringProperty(0, "knowledgebase.type.list");
-    public static final String KNOWLEDGEBASE_NAME_LIST = FlowWriteConfigurations.getStringProperty(0, "knowledgebase.name.list");
+    public static final String KNOWLEDGEBASE_FILE_STORAGE_PATH = ConfigurationsUtils.getStringProperty(propService, "knowledgebase.file.storage.path");
+    public static final String KNOWLEDGEBASE_FILE_STORAGE_TYPE = ConfigurationsUtils.getStringProperty(propService, "knowledgebase.file.storage.type");
 
     /**
      * System config
      */
-    public static final Integer SOURCE_PARALLELISM = FlowWriteConfigurations.getIntProperty(0, "source.parallelism");
-    public static final Integer SINK_PARALLELISM = FlowWriteConfigurations.getIntProperty(0, "sink.parallelism");
-    public static final Integer TRANSFORM_PARALLELISM = FlowWriteConfigurations.getIntProperty(0, "transform.parallelism");
-    public static final Integer DATA_CENTER_ID_NUM = FlowWriteConfigurations.getIntProperty(0, "data.center.id.num");
-    public static final Integer LOG_NEED_COMPLETE = FlowWriteConfigurations.getIntProperty(0, "log.need.complete");
-    public static final String MAIL_DEFAULT_CHARSET = FlowWriteConfigurations.getStringProperty(1, "mail.default.charset");
-    public static final Integer LOG_TRANSFORM_TYPE = FlowWriteConfigurations.getIntProperty(1, "log.transform.type");
-    public static final String DATA_RELATIONSHIP_MODEL = FlowWriteConfigurations.getStringProperty(1, "data.relationship.model");
-    public static final Integer BUFFER_TIMEOUT = FlowWriteConfigurations.getIntProperty(1, "buffer.timeout");
+    public static final Integer SOURCE_PARALLELISM = ConfigurationsUtils.getIntProperty(propService, "source.parallelism");
+    public static final Integer SINK_PARALLELISM = ConfigurationsUtils.getIntProperty(propService, "sink.parallelism");
+    public static final Integer TRANSFORM_PARALLELISM = ConfigurationsUtils.getIntProperty(propService, "transform.parallelism");
+    public static final Integer DATA_CENTER_ID_NUM = ConfigurationsUtils.getIntProperty(propService, "data.center.id.num");
+    public static final Integer LOG_NEED_COMPLETE = ConfigurationsUtils.getIntProperty(propService, "log.need.complete");
+    public static final Integer LOG_TRANSFORM_TYPE = ConfigurationsUtils.getIntProperty(propDefault, "log.transform.type");
+    public static final String DATA_RELATIONSHIP_MODEL = ConfigurationsUtils.getStringProperty(propDefault, "data.relationship.model");
+    public static final Integer BUFFER_TIMEOUT = ConfigurationsUtils.getIntProperty(propDefault, "buffer.timeout");
 
     /**
      * HBase
      */
-    public static final Integer HBASE_TICK_TUPLE_FREQ_SECS = FlowWriteConfigurations.getIntProperty(0, "hbase.tick.tuple.freq.secs");
-    public static final Integer HBASE_GTPC_SCAN_MAX_ROWS = FlowWriteConfigurations.getIntProperty(1, "hbase.gtpc.scan.max.rows");
-    public static final Integer HBASE_RADIUS_SCAN_MAX_ROWS = FlowWriteConfigurations.getIntProperty(1, "hbase.radius.scan.max.rows");
-    public static final String HBASE_RADIUS_TABLE_NAME = FlowWriteConfigurations.getStringProperty(1, "hbase.radius.table.name");
-    public static final String HBASE_GTPC_TABLE_NAME = FlowWriteConfigurations.getStringProperty(1, "hbase.gtpc.table.name");
-    public static final String HBASE_RPC_TIMEOUT = FlowWriteConfigurations.getStringProperty(1, "hbase.rpc.timeout");
+    public static final Integer HBASE_TICK_TUPLE_FREQ_SECS = ConfigurationsUtils.getIntProperty(propService, "hbase.tick.tuple.freq.secs");
+    public static final Integer HBASE_GTPC_SCAN_MAX_ROWS = ConfigurationsUtils.getIntProperty(propDefault, "hbase.gtpc.scan.max.rows");
+    public static final Integer HBASE_RADIUS_SCAN_MAX_ROWS = ConfigurationsUtils.getIntProperty(propDefault, "hbase.radius.scan.max.rows");
+    public static final String HBASE_RADIUS_TABLE_NAME = ConfigurationsUtils.getStringProperty(propDefault, "hbase.radius.table.name");
+    public static final String HBASE_GTPC_TABLE_NAME = ConfigurationsUtils.getStringProperty(propDefault, "hbase.gtpc.table.name");
+    public static final String HBASE_RPC_TIMEOUT = ConfigurationsUtils.getStringProperty(propDefault, "hbase.rpc.timeout");
 
     /**
      * HDFS
      */
-    public static final String HDFS_SERVERS = FlowWriteConfigurations.getStringProperty(0, "hdfs.servers");
+    public static final String HDFS_SERVERS = ConfigurationsUtils.getStringProperty(propService, "hdfs.servers");
 
     /**
      * HTTP
      */
-    public static final Integer HTTP_POOL_MAX_CONNECTION = FlowWriteConfigurations.getIntProperty(1, "http.pool.max.connection");
-    public static final Integer HTTP_POOL_MAX_PER_ROUTE = FlowWriteConfigurations.getIntProperty(1, "http.pool.max.per.route");
-    public static final Integer HTTP_POOL_REQUEST_TIMEOUT = FlowWriteConfigurations.getIntProperty(1, "http.pool.request.timeout");
-    public static final Integer HTTP_POOL_CONNECT_TIMEOUT = FlowWriteConfigurations.getIntProperty(1, "http.pool.connect.timeout");
-    public static final Integer HTTP_SOCKET_TIMEOUT = FlowWriteConfigurations.getIntProperty(1, "http.socket.timeout");
+    public static final Integer HTTP_POOL_MAX_CONNECTION = ConfigurationsUtils.getIntProperty(propDefault, "http.pool.max.connection");
+    public static final Integer HTTP_POOL_MAX_PER_ROUTE = ConfigurationsUtils.getIntProperty(propDefault, "http.pool.max.per.route");
+    public static final Integer HTTP_POOL_REQUEST_TIMEOUT = ConfigurationsUtils.getIntProperty(propDefault, "http.pool.request.timeout");
+    public static final Integer HTTP_POOL_CONNECT_TIMEOUT = ConfigurationsUtils.getIntProperty(propDefault, "http.pool.connect.timeout");
+    public static final Integer HTTP_SOCKET_TIMEOUT = ConfigurationsUtils.getIntProperty(propDefault, "http.socket.timeout");
 
     /**
      * kafka common
      */
-    public static final String KAFKA_SASL_JAAS_USER = encryptor.decrypt(FlowWriteConfigurations.getStringProperty(1, "kafka.user"));
-    public static final String KAFKA_SASL_JAAS_PIN = encryptor.decrypt(FlowWriteConfigurations.getStringProperty(1, "kafka.pin"));
+    public static final String KAFKA_SASL_JAAS_USER = encryptor.decrypt(ConfigurationsUtils.getStringProperty(propDefault, "kafka.user"));
+    public static final String KAFKA_SASL_JAAS_PIN = encryptor.decrypt(ConfigurationsUtils.getStringProperty(propDefault, "kafka.pin"));
 
     /**
      * kafka source config
      */
-    public static final String SOURCE_KAFKA_TOPIC = FlowWriteConfigurations.getStringProperty(0, "source.kafka.topic");
-    public static final String GROUP_ID = FlowWriteConfigurations.getStringProperty(0, "group.id");
-    public static final String SESSION_TIMEOUT_MS = FlowWriteConfigurations.getStringProperty(1, "session.timeout.ms");
-    public static final String MAX_POLL_RECORDS = FlowWriteConfigurations.getStringProperty(1, "max.poll.records");
-    public static final String MAX_PARTITION_FETCH_BYTES = FlowWriteConfigurations.getStringProperty(1, "max.partition.fetch.bytes");
+    public static final String SOURCE_KAFKA_TOPIC = ConfigurationsUtils.getStringProperty(propService, "source.kafka.topic");
+    public static final String GROUP_ID = ConfigurationsUtils.getStringProperty(propService, "group.id");
+    public static final String SESSION_TIMEOUT_MS = ConfigurationsUtils.getStringProperty(propDefault, "session.timeout.ms");
+    public static final String MAX_POLL_RECORDS = ConfigurationsUtils.getStringProperty(propDefault, "max.poll.records");
+    public static final String MAX_PARTITION_FETCH_BYTES = ConfigurationsUtils.getStringProperty(propDefault, "max.partition.fetch.bytes");
 
     /**
      * kafka sink config
      */
-    public static final String SINK_KAFKA_TOPIC = FlowWriteConfigurations.getStringProperty(0, "sink.kafka.topic");
-    public static final String PRODUCER_ACK = FlowWriteConfigurations.getStringProperty(1, "producer.ack");
-    public static final String PRODUCER_KAFKA_COMPRESSION_TYPE = FlowWriteConfigurations.getStringProperty(0, "producer.kafka.compression.type");
+    public static final String SINK_KAFKA_TOPIC = ConfigurationsUtils.getStringProperty(propService, "sink.kafka.topic");
+    public static final String PRODUCER_ACK = ConfigurationsUtils.getStringProperty(propDefault, "producer.ack");
+    public static final String PRODUCER_KAFKA_COMPRESSION_TYPE = ConfigurationsUtils.getStringProperty(propService, "producer.kafka.compression.type");
 
     /**
      * connection kafka
      */
-    public static final String RETRIES = FlowWriteConfigurations.getStringProperty(1, "retries");
-    public static final String LINGER_MS = FlowWriteConfigurations.getStringProperty(1, "linger.ms");
-    public static final Integer REQUEST_TIMEOUT_MS = FlowWriteConfigurations.getIntProperty(1, "request.timeout.ms");
-    public static final Integer BATCH_SIZE = FlowWriteConfigurations.getIntProperty(1, "batch.size");
-    public static final Integer BUFFER_MEMORY = FlowWriteConfigurations.getIntProperty(1, "buffer.memory");
-    public static final Integer MAX_REQUEST_SIZE = FlowWriteConfigurations.getIntProperty(1, "max.request.size");
+    public static final String RETRIES = ConfigurationsUtils.getStringProperty(propDefault, "retries");
+    public static final String LINGER_MS = ConfigurationsUtils.getStringProperty(propDefault, "linger.ms");
+    public static final Integer REQUEST_TIMEOUT_MS = ConfigurationsUtils.getIntProperty(propDefault, "request.timeout.ms");
+    public static final Integer BATCH_SIZE = ConfigurationsUtils.getIntProperty(propDefault, "batch.size");
+    public static final Integer BUFFER_MEMORY = ConfigurationsUtils.getIntProperty(propDefault, "buffer.memory");
+    public static final Integer MAX_REQUEST_SIZE = ConfigurationsUtils.getIntProperty(propDefault, "max.request.size");
 
     /**
      * common config
      */
-    public static final String SOURCE_KAFKA_SERVERS = FlowWriteConfigurations.getStringProperty(0, "source.kafka.servers");
-    public static final String SINK_KAFKA_SERVERS = FlowWriteConfigurations.getStringProperty(0, "sink.kafka.servers");
-    public static final String ZOOKEEPER_SERVERS = FlowWriteConfigurations.getStringProperty(0, "zookeeper.servers");
-    public static final String TOOLS_LIBRARY = FlowWriteConfigurations.getStringProperty(0, "tools.library");
+    public static final String SOURCE_KAFKA_SERVERS = ConfigurationsUtils.getStringProperty(propService, "source.kafka.servers");
+    public static final String SINK_KAFKA_SERVERS = ConfigurationsUtils.getStringProperty(propService, "sink.kafka.servers");
+    public static final String ZOOKEEPER_SERVERS = ConfigurationsUtils.getStringProperty(propService, "zookeeper.servers");
+    public static final String TOOLS_LIBRARY = ConfigurationsUtils.getStringProperty(propService, "tools.library");
 
 }

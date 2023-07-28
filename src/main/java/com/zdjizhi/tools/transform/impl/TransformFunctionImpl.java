@@ -6,7 +6,7 @@ import com.alibaba.fastjson2.JSONObject;
 import com.zdjizhi.common.FlowWriteConfig;
 import com.zdjizhi.tools.general.SnowflakeId;
 import com.zdjizhi.tools.transform.TransformFunction;
-import com.zdjizhi.tools.hbase.HBaseUtils;
+import com.zdjizhi.tools.connections.hbase.HBaseUtils;
 import com.zdjizhi.tools.json.JsonPathUtil;
 import com.zdjizhi.utils.FormatUtils;
 import com.zdjizhi.utils.IpLookupV2;
@@ -25,7 +25,17 @@ import java.util.HashMap;
 public class TransformFunctionImpl implements TransformFunction {
     private static final Log logger = LogFactory.get();
     private static final int IF_PARAM_LENGTH = 3;
+    /**
+     * if函数连接分隔符
+     */
+    private static final String IF_CONDITION_SPLITTER = "=";
+
     private static final String SEPARATOR = "!=";
+
+    /**
+     * 标识字段为日志字段还是schema指定字段
+     */
+    private static final String IS_JSON_KEY_TAG = "$.";
 
     /**
      * 生成当前时间戳的操作
@@ -241,7 +251,7 @@ public class TransformFunctionImpl implements TransformFunction {
                         result = direction.equals(regexp[1]) ? resultA : resultB;
                     }
                 } else {
-                    String[] regexp = expression.split(FlowWriteConfig.IF_CONDITION_SPLITTER);
+                    String[] regexp = expression.split(IF_CONDITION_SPLITTER);
                     Object direction = isJsonValue(jsonObject, regexp[0]);
                     if (direction instanceof Number) {
                         result = Integer.parseInt(direction.toString()) == Integer.parseInt(regexp[1]) ? resultA : resultB;
@@ -288,7 +298,7 @@ public class TransformFunctionImpl implements TransformFunction {
      * @return JSON.Value or String
      */
     private static Object isJsonValue(JSONObject jsonObject, String param) {
-        if (param.contains(FlowWriteConfig.IS_JSON_KEY_TAG)) {
+        if (param.contains(IS_JSON_KEY_TAG)) {
             return jsonObject.get(param.substring(2));
         } else {
             return param;

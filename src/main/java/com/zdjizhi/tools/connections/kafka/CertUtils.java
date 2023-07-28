@@ -1,4 +1,4 @@
-package com.zdjizhi.tools.kafka;
+package com.zdjizhi.tools.connections.kafka;
 
 import com.zdjizhi.common.FlowWriteConfig;
 import org.apache.kafka.common.config.SslConfigs;

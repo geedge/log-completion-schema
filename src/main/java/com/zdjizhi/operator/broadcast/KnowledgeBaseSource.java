@@ -6,16 +6,16 @@ import cn.hutool.crypto.digest.DigestUtil;
 import cn.hutool.log.Log;
 import cn.hutool.log.LogFactory;
 import com.alibaba.fastjson2.*;
-import com.alibaba.nacos.api.NacosFactory;
-import com.alibaba.nacos.api.PropertyKeyConst;
 import com.alibaba.nacos.api.config.ConfigService;
 import com.alibaba.nacos.api.config.listener.Listener;
 import com.alibaba.nacos.api.exception.NacosException;
 import com.google.common.base.Joiner;
+import com.zdjizhi.common.CommonConfig;
 import com.zdjizhi.common.FlowWriteConfig;
 import com.zdjizhi.common.pojo.KnowlegeBaseMeta;
-import com.zdjizhi.tools.hadoop.HadoopUtils;
-import com.zdjizhi.tools.http.HttpClientService;
+import com.zdjizhi.tools.connections.hadoop.HadoopUtils;
+import com.zdjizhi.tools.connections.http.HttpClientService;
+import com.zdjizhi.tools.connections.nacos.NacosConnection;
 import com.zdjizhi.utils.StringUtil;
 import org.apache.commons.io.IOUtils;
 import org.apache.flink.configuration.Configuration;
@@ -24,7 +24,6 @@ import org.apache.flink.streaming.api.functions.source.RichSourceFunction;
 import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
 import java.util.concurrent.Executor;
 
 /**
@@ -33,6 +32,10 @@ import java.util.concurrent.Executor;
  */
 public class KnowledgeBaseSource extends RichSourceFunction<Map<String, String>> {
     private static final Log logger = LogFactory.get();
+    /**
+     * 定位库默认分隔符
+     */
+    private static final String LOCATION_SEPARATOR = ".";
     //最大重试次数
     private static final int TRY_TIMES = 5;
     //定位库元数据缓存
@@ -70,7 +73,7 @@ public class KnowledgeBaseSource extends RichSourceFunction<Map<String, String>>
         try {
             sendUpdateCache(ctx);
 
-            nacosConfigService.addListener(FlowWriteConfig.NACOS_KNOWLEDGEBASE_DATA_ID, FlowWriteConfig.NACOS_KNOWLEDGEBASE_GROUP, new Listener() {
+            nacosConfigService.addListener(FlowWriteConfig.NACOS_KNOWLEDGEBASE_DATA_ID, FlowWriteConfig.NACOS_PUBLIC_GROUP, new Listener() {
                 @Override
                 public Executor getExecutor() {
                     return null;
@@ -85,7 +88,7 @@ public class KnowledgeBaseSource extends RichSourceFunction<Map<String, String>>
                             if (jsonArray.size() > 0) {
                                 for (int i = 0; i < jsonArray.size(); i++) {
                                     KnowlegeBaseMeta knowlegeBaseMeta = JSONObject.parseObject(jsonArray.getString(i), KnowlegeBaseMeta.class);
-                                    String fileName = Joiner.on(FlowWriteConfig.LOCATION_SEPARATOR).useForNull("").join(knowlegeBaseMeta.getName(), knowlegeBaseMeta.getFormat());
+                                    String fileName = Joiner.on(LOCATION_SEPARATOR).useForNull("").join(knowlegeBaseMeta.getName(), knowlegeBaseMeta.getFormat());
                                     String sha256 = knowlegeBaseMeta.getSha256();
                                     String filePath = knowlegeBaseMeta.getPath();
                                     if (!sha256.equals(knowledgeMetaCache.get(fileName))) {
@@ -118,17 +121,8 @@ public class KnowledgeBaseSource extends RichSourceFunction<Map<String, String>>
     }
 
     private void createNacosConnection() {
-        Properties properties = new Properties();
-        properties.setProperty(PropertyKeyConst.SERVER_ADDR, FlowWriteConfig.NACOS_SERVER);
-        properties.setProperty(PropertyKeyConst.NAMESPACE, FlowWriteConfig.NACOS_KNOWLEDGEBASE_NAMESPACE);
-        properties.setProperty(PropertyKeyConst.USERNAME, FlowWriteConfig.NACOS_USERNAME);
-        properties.setProperty(PropertyKeyConst.PASSWORD, FlowWriteConfig.NACOS_PIN);
-        try {
-            nacosConfigService = NacosFactory.createConfigService(properties);
-        } catch (NacosException e) {
-            logger.error("创建Nacos连接异常，异常信息为:{}", e.getMessage());
-            e.printStackTrace();
-        }
+        NacosConnection nacosConnection = new NacosConnection();
+        nacosConfigService = nacosConnection.getPublicService();
     }
 
     private void sendUpdateCache(SourceContext<Map<String, String>> ctx) {
@@ -145,7 +139,7 @@ public class KnowledgeBaseSource extends RichSourceFunction<Map<String, String>>
         String configMsg = "";
         try {
             configMsg = nacosConfigService.getConfig(FlowWriteConfig.NACOS_KNOWLEDGEBASE_DATA_ID,
-                    FlowWriteConfig.NACOS_KNOWLEDGEBASE_GROUP,
+                    FlowWriteConfig.NACOS_PUBLIC_GROUP,
                     FlowWriteConfig.NACOS_CONNECTION_TIMEOUT);
         } catch (NacosException e) {
             logger.error("从Nacos获取知识库元数据配置文件异常，异常信息为:{}", e.getMessage());
@@ -158,7 +152,7 @@ public class KnowledgeBaseSource extends RichSourceFunction<Map<String, String>>
                 if (jsonArray.size() > 0) {
                     for (int i = 0; i < jsonArray.size(); i++) {
                         KnowlegeBaseMeta knowlegeBaseMeta = JSONObject.parseObject(jsonArray.getString(i), KnowlegeBaseMeta.class);
-                        String fileName = Joiner.on(FlowWriteConfig.LOCATION_SEPARATOR).useForNull("").join(knowlegeBaseMeta.getName(), knowlegeBaseMeta.getFormat());
+                        String fileName = Joiner.on(LOCATION_SEPARATOR).useForNull("").join(knowlegeBaseMeta.getName(), knowlegeBaseMeta.getFormat());
                         String sha256 = knowlegeBaseMeta.getSha256();
                         String filePath = knowlegeBaseMeta.getPath();
                         byte[] localFile = getLocalFile(fileName);
@@ -272,8 +266,8 @@ public class KnowledgeBaseSource extends RichSourceFunction<Map<String, String>>
      * @return 过滤参数
      */
     private static String getFilterParameter() {
-        String[] typeList = FlowWriteConfig.KNOWLEDGEBASE_TYPE_LIST.split(",");
-        String[] nameList = FlowWriteConfig.KNOWLEDGEBASE_NAME_LIST.split(",");
+        String[] typeList = CommonConfig.KNOWLEDGEBASE_TYPE_LIST.split(",");
+        String[] nameList = CommonConfig.KNOWLEDGEBASE_NAME_LIST.split(",");
         String expr = "[?(@.version=='latest')]";
 
         if (typeList.length > 1) {

@@ -5,6 +5,7 @@ import com.alibaba.nacos.api.PropertyKeyConst;
 import com.alibaba.nacos.api.config.ConfigService;
 import com.alibaba.nacos.api.config.listener.Listener;
 import com.alibaba.nacos.api.exception.NacosException;
+import com.alibaba.nacos.client.config.impl.LocalConfigInfoProcessor;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -40,8 +41,8 @@ public class NacosTest {
     private static final String GROUP = "Galaxy";
 
     private void getProperties() {
-        properties.setProperty(PropertyKeyConst.SERVER_ADDR, "192.168.44.67:8848");
-        properties.setProperty(PropertyKeyConst.NAMESPACE, "f507879a-8b1b-4330-913e-83d4fcdc14bb");
+        properties.setProperty(PropertyKeyConst.SERVER_ADDR, "192.168.44.241:8848");
+        properties.setProperty(PropertyKeyConst.NAMESPACE, "prod");
         properties.setProperty(PropertyKeyConst.USERNAME, "nacos");
         properties.setProperty(PropertyKeyConst.PASSWORD, "nacos");
     }

@@ -1,4 +1,4 @@
-package com.zdjizhi.tools.zookeeper;
+package com.zdjizhi.tools.connections.zookeeper;
 
 import cn.hutool.log.Log;
 import cn.hutool.log.LogFactory;

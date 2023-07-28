@@ -28,7 +28,7 @@ public class SchemaListenerTest {
 
     static {
         properties.setProperty(PropertyKeyConst.SERVER_ADDR, "192.168.44.12:8848");
-        properties.setProperty(PropertyKeyConst.NAMESPACE, "test");
+        properties.setProperty(PropertyKeyConst.NAMESPACE, "prod");
         properties.setProperty(PropertyKeyConst.USERNAME, "nacos");
         properties.setProperty(PropertyKeyConst.PASSWORD, "nacos");
 
@@ -37,6 +37,7 @@ public class SchemaListenerTest {
             String dataId = "session_record.json";
             String group = "Galaxy";
             jobList = getJobListFromHttp(configService.getConfig(dataId, group, 5000));
+            System.out.println(jobList);
             configService.addListener(dataId, group, new Listener() {
                 @Override
                 public Executor getExecutor() {

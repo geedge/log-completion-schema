@@ -5,13 +5,12 @@ import cn.hutool.crypto.digest.DigestUtil;
 import cn.hutool.log.Log;
 import cn.hutool.log.LogFactory;
 import com.zdjizhi.common.FlowWriteConfig;
-import com.zdjizhi.tools.hadoop.HadoopUtils;
+import com.zdjizhi.tools.connections.hadoop.HadoopUtils;
 import com.zdjizhi.utils.IpLookupV2;
 import com.zdjizhi.utils.StringUtil;
 import org.apache.commons.io.IOUtils;
 
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
 
@@ -27,6 +26,7 @@ public class IpLookupUtils {
     private static final String ipv6UserDefinedName = "ip_v6_user_defined.mmdb";
     private static final String asnV4Name = "asn_v4.mmdb";
     private static final String asnV6Name = "asn_v6.mmdb";
+
 
     /**
      * 从HDFS下载文件更新IpLookup

@@ -170,7 +170,7 @@ public class NewSchemaTest {
             com.alibaba.fastjson2.JSONObject doc = com.alibaba.fastjson2.JSONObject.parseObject(fieldJson.getString("doc"));
             if (doc.containsKey("visibility")) {
                 String visibility = doc.getString("visibility");
-                if (FlowWriteConfig.VISIBILITY.equals(visibility)) {
+                if ("disabled".equals(visibility)) {
                     isKeepField = false;
                 }
             }

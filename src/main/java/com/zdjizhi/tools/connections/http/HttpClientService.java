@@ -1,4 +1,4 @@
-package com.zdjizhi.tools.http;
+package com.zdjizhi.tools.connections.http;
 
 import cn.hutool.log.Log;
 import cn.hutool.log.LogFactory;

@@ -3,8 +3,8 @@ package com.zdjizhi.tools.general;
 import cn.hutool.log.Log;
 import cn.hutool.log.LogFactory;
 import com.zdjizhi.common.FlowWriteConfig;
-import com.zdjizhi.tools.zookeeper.DistributedLock;
-import com.zdjizhi.tools.zookeeper.ZookeeperUtils;
+import com.zdjizhi.tools.connections.zookeeper.DistributedLock;
+import com.zdjizhi.tools.connections.zookeeper.ZookeeperUtils;
 
 /**
  * 雪花算法

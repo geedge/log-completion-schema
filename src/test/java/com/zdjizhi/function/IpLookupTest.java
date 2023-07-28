@@ -7,10 +7,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.maxmind.db.CHMCache;
 import com.maxmind.db.Reader;
 import com.zdjizhi.common.FlowWriteConfig;
-import com.zdjizhi.tools.http.HttpClientService;
+import com.zdjizhi.tools.connections.http.HttpClientService;
 import com.zdjizhi.utils.IpLookupV2;
-import org.apache.http.Header;
-import org.apache.http.message.BasicHeader;
 import org.junit.Test;
 
 import java.io.*;

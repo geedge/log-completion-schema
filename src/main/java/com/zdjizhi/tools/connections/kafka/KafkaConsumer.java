@@ -1,6 +1,5 @@
-package com.zdjizhi.tools.kafka;
+package com.zdjizhi.tools.connections.kafka;
 
-import com.alibaba.fastjson2.JSONObject;
 import com.zdjizhi.common.FlowWriteConfig;
 import org.apache.flink.api.common.serialization.SimpleStringSchema;
 import org.apache.flink.api.java.tuple.Tuple2;

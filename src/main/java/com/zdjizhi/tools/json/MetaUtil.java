@@ -9,7 +9,10 @@ import com.alibaba.nacos.api.PropertyKeyConst;
 import com.alibaba.nacos.api.config.ConfigService;
 import com.alibaba.nacos.api.config.listener.Listener;
 import com.alibaba.nacos.api.exception.NacosException;
+import com.alibaba.nacos.client.config.impl.LocalConfigInfoProcessor;
+import com.zdjizhi.common.CommonConfig;
 import com.zdjizhi.common.FlowWriteConfig;
+import com.zdjizhi.tools.connections.nacos.NacosConnection;
 import com.zdjizhi.utils.StringUtil;
 
 import java.util.*;
@@ -23,7 +26,11 @@ import java.util.concurrent.Executor;
  */
 public class MetaUtil {
     private static final Log logger = LogFactory.get();
-    private static Properties schemaProperties = new Properties();
+
+    /**
+     * 有此标识的字段为失效字段，不计入最终日志字段
+     */
+    private static final String VISIBILITY = "disabled";
 
     /**
      * 获取需要删除字段的列表
@@ -48,35 +55,34 @@ public class MetaUtil {
     private static ArrayList<String[]> jobList;
 
     static {
-        schemaProperties.setProperty(PropertyKeyConst.SERVER_ADDR, FlowWriteConfig.NACOS_SERVER);
-        schemaProperties.setProperty(PropertyKeyConst.NAMESPACE, FlowWriteConfig.NACOS_SCHEMA_NAMESPACE);
-        schemaProperties.setProperty(PropertyKeyConst.USERNAME, FlowWriteConfig.NACOS_USERNAME);
-        schemaProperties.setProperty(PropertyKeyConst.PASSWORD, FlowWriteConfig.NACOS_PIN);
+        NacosConnection nacosConnection = new NacosConnection();
+        ConfigService schemaService = nacosConnection.getSchemaService();
         try {
-            ConfigService configService = NacosFactory.createConfigService(schemaProperties);
-            String dataId = FlowWriteConfig.NACOS_SCHEMA_DATA_ID;
-            String group = FlowWriteConfig.NACOS_SCHEMA_GROUP;
-            String schema = configService.getConfig(dataId, group, FlowWriteConfig.NACOS_CONNECTION_TIMEOUT);
-            if (StringUtil.isNotBlank(schema)) {
-                jsonFieldsMap = getFieldsFromSchema(schema);
-                jobList = getJobListFromHttp(schema);
-            }
-            configService.addListener(dataId, group, new Listener() {
+            String schema = schemaService.getConfigAndSignListener(FlowWriteConfig.NACOS_SCHEMA_DATA_ID, FlowWriteConfig.NACOS_SCHEMA_GROUP, FlowWriteConfig.NACOS_CONNECTION_TIMEOUT, new Listener() {
                 @Override
                 public Executor getExecutor() {
                     return null;
                 }
 
                 @Override
-                public void receiveConfigInfo(String configMsg) {
-                    if (StringUtil.isNotBlank(configMsg)) {
-                        logger.info("检测到Nacos内Schema发生变化，重新加载Schema。");
-                        clearCache();
-                        jsonFieldsMap = getFieldsFromSchema(configMsg);
-                        jobList = getJobListFromHttp(configMsg);
+                public void receiveConfigInfo(String configInfo) {
+                    if (StringUtil.isNotBlank(configInfo)) {
+                        if (CommonConfig.SCHEMA_UPDATE_ENABLED) {
+                            logger.info("Reload the " + FlowWriteConfig.NACOS_SCHEMA_DATA_ID + "schema when it changes.");
+                            clearCache();
+                            jsonFieldsMap = getFieldsFromSchema(configInfo);
+                            jobList = getJobListFromHttp(configInfo);
+                        } else {
+                            logger.info("The schema changes, but the dynamic update configuration is disabled and no operation is performed!");
+                        }
                     }
                 }
             });
+
+            if (StringUtil.isNotBlank(schema)) {
+                jsonFieldsMap = getFieldsFromSchema(schema);
+                jobList = getJobListFromHttp(schema);
+            }
         } catch (NacosException e) {
             logger.error("Get Schema config from Nacos error,The exception message is :" + e.getMessage());
         }
@@ -229,7 +235,7 @@ public class MetaUtil {
             JSONObject doc = JSONObject.parseObject(fieldJson.getString("doc"));
             if (doc.containsKey("visibility")) {
                 String visibility = doc.getString("visibility");
-                if (FlowWriteConfig.VISIBILITY.equals(visibility)) {
+                if (VISIBILITY.equals(visibility)) {
                     isKeepField = false;
                 }
             }

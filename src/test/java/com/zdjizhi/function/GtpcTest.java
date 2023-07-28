@@ -3,7 +3,7 @@ package com.zdjizhi.function;
 import cn.hutool.log.Log;
 import cn.hutool.log.LogFactory;
 import com.zdjizhi.common.FlowWriteConfig;
-import com.zdjizhi.tools.hbase.HBaseUtils;
+import com.zdjizhi.tools.connections.hbase.HBaseUtils;
 import com.zdjizhi.tools.json.JsonPathUtil;
 import org.junit.Test;
 

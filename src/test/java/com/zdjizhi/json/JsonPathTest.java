@@ -7,6 +7,7 @@ import com.alibaba.nacos.api.NacosFactory;
 import com.alibaba.nacos.api.PropertyKeyConst;
 import com.alibaba.nacos.api.config.ConfigService;
 import com.alibaba.nacos.api.exception.NacosException;
+import com.zdjizhi.common.CommonConfig;
 import com.zdjizhi.common.FlowWriteConfig;
 import org.junit.Test;
 
@@ -64,8 +65,8 @@ public class JsonPathTest {
     }
 
     public static String combinationFilterList() {
-        String[] typeList = FlowWriteConfig.KNOWLEDGEBASE_TYPE_LIST.split(",");
-        String[] nameList = FlowWriteConfig.KNOWLEDGEBASE_NAME_LIST.split(",");
+        String[] typeList = CommonConfig.KNOWLEDGEBASE_TYPE_LIST.split(",");
+        String[] nameList = CommonConfig.KNOWLEDGEBASE_NAME_LIST.split(",");
         String expr = "[?(@.version=='latest')]";
         // ip_location > 'ip_location'
 

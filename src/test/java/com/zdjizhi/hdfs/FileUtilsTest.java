@@ -14,7 +14,7 @@ import java.net.URISyntaxException;
 
 /**
  * @author qidaijie
- * @Package com.zdjizhi.tools.hadoop
+ * @Package com.zdjizhi.tools.connections.hadoop
  * @Description:
  * @date 2022/11/217:57
  */

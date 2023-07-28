@@ -6,10 +6,8 @@ import com.google.common.base.Joiner;
 import com.maxmind.db.CHMCache;
 import com.maxmind.db.Reader;
 import com.zdjizhi.common.FlowWriteConfig;
-import com.zdjizhi.tools.http.HttpClientService;
+import com.zdjizhi.tools.connections.http.HttpClientService;
 import com.zdjizhi.utils.StringUtil;
-import org.apache.http.Header;
-import org.apache.http.message.BasicHeader;
 import org.junit.Test;
 
 import java.io.File;

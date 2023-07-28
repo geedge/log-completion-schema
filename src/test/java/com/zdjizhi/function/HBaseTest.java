@@ -1,23 +1,17 @@
 package com.zdjizhi.function;
 
-import cn.hutool.json.JSONObject;
 import cn.hutool.log.Log;
 import cn.hutool.log.LogFactory;
 import com.zdjizhi.common.FlowWriteConfig;
-import com.zdjizhi.tools.hbase.HBaseUtils;
 import com.zdjizhi.utils.StringUtil;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hbase.Cell;
-import org.apache.hadoop.hbase.CellUtil;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.*;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.junit.Test;
-import scala.Int;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -208,7 +202,7 @@ public class HBaseTest {
      * @return 结果数据
      */
     static String getVsysId(Result result) {
-        byte[] familyBytes = Bytes.toBytes(FlowWriteConfig.COMMON_FAMILY_NAME);
+        byte[] familyBytes = Bytes.toBytes("common");
         byte[] columnBytes = Bytes.toBytes("vsys_id");
         boolean contains = result.containsColumn(familyBytes, columnBytes);
         if (contains) {
