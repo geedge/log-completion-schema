@@ -26,6 +26,7 @@ public class FlowWriteConfig {
             propDefault.load(ConfigurationsUtils.class.getClassLoader().getResourceAsStream("default_config.properties"));
         } catch (IOException | RuntimeException e) {
             logger.error("Loading the configuration file Failed!,The error message is:{}" + e);
+            System.exit(0);
         }
     }
 

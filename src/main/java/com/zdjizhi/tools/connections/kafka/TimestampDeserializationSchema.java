@@ -2,6 +2,7 @@ package com.zdjizhi.tools.connections.kafka;
 
 import cn.hutool.log.Log;
 import cn.hutool.log.LogFactory;
+import com.alibaba.fastjson2.JSONObject;
 import org.apache.flink.api.common.typeinfo.TypeHint;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.java.tuple.Tuple2;
@@ -31,11 +32,9 @@ public class TimestampDeserializationSchema implements KafkaDeserializationSchem
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public Tuple2<String, Long> deserialize(ConsumerRecord record) throws Exception {
         if (record != null) {
             try {
-
                 long timestamp = record.timestamp() / 1000;
                 String value = new String((byte[]) record.value(), ENCODING);
                 return new Tuple2<>(value, timestamp);

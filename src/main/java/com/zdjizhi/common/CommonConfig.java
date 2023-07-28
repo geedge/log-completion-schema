@@ -23,13 +23,19 @@ import java.util.concurrent.Executor;
 public class CommonConfig {
     private static final Log logger = LogFactory.get();
 
+    private static final String dataId = "olap_platform.properties";
+
     private static Properties configProperties;
 
+    public static String KNOWLEDGEBASE_TYPE_LIST;
+    public static String KNOWLEDGEBASE_NAME_LIST;
+    public static Boolean SCHEMA_UPDATE_ENABLED;
+
     static {
+        configProperties = new Properties();
         NacosConnection nacosConnection = new NacosConnection();
         ConfigService configService = nacosConnection.getPublicService();
         try {
-            String dataId = "olap_common_config.properties";
             String group = FlowWriteConfig.NACOS_PUBLIC_GROUP;
             String config = configService.getConfigAndSignListener(dataId, group, FlowWriteConfig.NACOS_CONNECTION_TIMEOUT, new Listener() {
                 @Override
@@ -41,6 +47,7 @@ public class CommonConfig {
                 public void receiveConfigInfo(String configInfo) {
                     if (StringUtil.isNotBlank(configInfo)) {
                         logger.info("Reload the common config when it changes.");
+                        clearProperties();
                         updateConfigProperties(configInfo);
                     }
                 }
@@ -57,16 +64,18 @@ public class CommonConfig {
 
 
     private static void updateConfigProperties(String config) {
-        configProperties = new Properties();
         try {
             configProperties.load(new StringReader(config));
+            KNOWLEDGEBASE_TYPE_LIST = ConfigurationsUtils.getStringProperty(configProperties, "etl.knowledgebase.type.list");
+            KNOWLEDGEBASE_NAME_LIST = ConfigurationsUtils.getStringProperty(configProperties, "etl.knowledgebase.name.list");
+            SCHEMA_UPDATE_ENABLED = ConfigurationsUtils.getBooleanProperty(configProperties, "etl.schema.update.enabled");
         } catch (IOException e) {
             logger.error("IOException:{}", e);
         }
     }
 
-    public static String KNOWLEDGEBASE_TYPE_LIST = ConfigurationsUtils.getStringProperty(configProperties, "etl.knowledgebase.type.list");
-    public static String KNOWLEDGEBASE_NAME_LIST = ConfigurationsUtils.getStringProperty(configProperties, "etl.knowledgebase.name.list");
-    public static Boolean SCHEMA_UPDATE_ENABLED = ConfigurationsUtils.getBooleanProperty(configProperties, "etl.schema.update.enabled");
+    private static void clearProperties() {
+        configProperties.clear();
+    }
 
 }
