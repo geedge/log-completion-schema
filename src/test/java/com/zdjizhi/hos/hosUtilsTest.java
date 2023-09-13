@@ -7,7 +7,7 @@ import com.maxmind.db.CHMCache;
 import com.maxmind.db.Reader;
 import com.zdjizhi.common.FlowWriteConfig;
 import com.zdjizhi.tools.connections.http.HttpClientService;
-import com.zdjizhi.utils.StringUtil;
+import com.geedgenetworks.utils.StringUtil;
 import org.junit.Test;
 
 import java.io.File;
@@ -15,6 +15,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
+import java.util.Map;
 
 /**
  * @author qidaijie
@@ -59,13 +60,13 @@ public class hosUtilsTest {
             inputStream = httpClientService.httpGetInputStream(url, 3000);
             Reader reader = new Reader(inputStream, new CHMCache());
             InetAddress ipAddress = InetAddress.getByName("114.64.231.114");
-            JsonNode jsonNode = reader.get(ipAddress);
-            if (jsonNode != null) {
-                System.out.println(StringUtil.setDefaultIfEmpty(jsonNode.toString(), "unkonw").toString());
-                System.out.println(Joiner.on(".").useForNull("").join(jsonNode.get("COUNTRY"),
-                        jsonNode.get("SUPER_ADMINISTRATIVE_AREA"), jsonNode.get("ADMINISTRATIVE_AREA")));
-                System.out.println(Joiner.on(".").useForNull("").join(jsonNode.get("COUNTRY"),
-                        jsonNode.get("SUPER_ADMINISTRATIVE_AREA"), jsonNode.get("ADMINISTRATIVE_AREA")).replace("\"", ""));
+            Map map = reader.get(ipAddress, Map.class);
+            if (map != null) {
+                System.out.println(StringUtil.setDefaultIfEmpty(map.toString(), "unkonw").toString());
+                System.out.println(Joiner.on(".").useForNull("").join(map.get("COUNTRY"),
+                        map.get("SUPER_ADMINISTRATIVE_AREA"), map.get("ADMINISTRATIVE_AREA")));
+                System.out.println(Joiner.on(".").useForNull("").join(map.get("COUNTRY"),
+                        map.get("SUPER_ADMINISTRATIVE_AREA"), map.get("ADMINISTRATIVE_AREA")).replace("\"", ""));
             }
         } catch (IOException | RuntimeException e) {
             e.printStackTrace();
@@ -83,11 +84,11 @@ public class hosUtilsTest {
             inputStream = httpClientService.httpGetInputStream(url, 3000);
             Reader reader = new Reader(inputStream, new CHMCache());
             InetAddress ipAddress = InetAddress.getByName("23.200.74.224");
-            JsonNode jsonNode = reader.get(ipAddress);
-            if (jsonNode != null) {
-                System.out.println(StringUtil.setDefaultIfEmpty(jsonNode.get("ASN"), "unkonw").toString());
-                System.out.println(StringUtil.setDefaultIfEmpty(jsonNode.get("ASN"), "unkonw").toString().replace("\"", ""));
-                System.out.println(StringUtil.setDefaultIfEmpty(jsonNode.toString(), "unkonw").toString());
+            Map map = reader.get(ipAddress, Map.class);
+            if (map != null) {
+                System.out.println(StringUtil.setDefaultIfEmpty(map.get("ASN"), "unkonw").toString());
+                System.out.println(StringUtil.setDefaultIfEmpty(map.get("ASN"), "unkonw").toString().replace("\"", ""));
+                System.out.println(StringUtil.setDefaultIfEmpty(map.toString(), "unkonw").toString());
             }
         } catch (IOException | RuntimeException e) {
             e.printStackTrace();

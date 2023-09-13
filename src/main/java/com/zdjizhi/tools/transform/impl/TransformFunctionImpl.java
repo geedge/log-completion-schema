@@ -3,14 +3,14 @@ package com.zdjizhi.tools.transform.impl;
 import cn.hutool.log.Log;
 import cn.hutool.log.LogFactory;
 import com.alibaba.fastjson2.JSONObject;
+import com.geedgenetworks.utils.FormatUtils;
+import com.geedgenetworks.utils.StringUtil;
 import com.zdjizhi.common.FlowWriteConfig;
+import com.zdjizhi.tools.general.IpLookupUtils;
 import com.zdjizhi.tools.general.SnowflakeId;
 import com.zdjizhi.tools.transform.TransformFunction;
 import com.zdjizhi.tools.connections.hbase.HBaseUtils;
 import com.zdjizhi.tools.json.JsonPathUtil;
-import com.zdjizhi.utils.FormatUtils;
-import com.zdjizhi.utils.IpLookupV2;
-import com.zdjizhi.utils.StringUtil;
 
 import java.io.UnsupportedEncodingException;
 import java.util.Base64;
@@ -57,10 +57,10 @@ public class TransformFunctionImpl implements TransformFunction {
      * @return ip地址详细信息
      */
     @Override
-    public String getGeoIpDetail(String ip, IpLookupV2 ipLookup) {
+    public String getGeoIpDetail(String ip) {
         String detail = "";
         try {
-            detail = ipLookup.cityLookupDetail(ip);
+            detail = IpLookupUtils.getIpLookup().cityLookupDetail(ip);
         } catch (NullPointerException npe) {
             logger.error("The IP Location MMDB file is not loaded or IP is null! " + npe);
         } catch (RuntimeException e) {
@@ -76,10 +76,10 @@ public class TransformFunctionImpl implements TransformFunction {
      * @return 国家
      */
     @Override
-    public String getGeoIpCountry(String ip, IpLookupV2 ipLookup) {
+    public String getGeoIpCountry(String ip) {
         String country = "";
         try {
-            country = ipLookup.countryLookup(ip);
+            country = IpLookupUtils.getIpLookup().countryLookup(ip);
         } catch (NullPointerException npe) {
             logger.error("The IP Location MMDB file is not loaded or IP is null! " + npe);
         } catch (RuntimeException e) {
@@ -95,10 +95,10 @@ public class TransformFunctionImpl implements TransformFunction {
      * @return ASN
      */
     @Override
-    public String getGeoAsn(String ip, IpLookupV2 ipLookup) {
+    public String getGeoAsn(String ip) {
         String asn = "";
         try {
-            asn = ipLookup.asnLookup(ip);
+            asn = IpLookupUtils.getIpLookup().asnLookup(ip);
         } catch (NullPointerException npe) {
             logger.error("The ASN MMDB file is not loaded or IP is null! " + npe);
         } catch (RuntimeException e) {

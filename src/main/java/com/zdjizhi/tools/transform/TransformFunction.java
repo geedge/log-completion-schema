@@ -1,7 +1,7 @@
 package com.zdjizhi.tools.transform;
 
 import com.alibaba.fastjson2.JSONObject;
-import com.zdjizhi.utils.IpLookupV2;
+import com.geedgenetworks.utils.IpLookupV2;
 
 
 /**
@@ -16,11 +16,11 @@ public interface TransformFunction {
 
     long getSnowflakeId();
 
-    String getGeoIpDetail(String ip, IpLookupV2 ipLookup);
+    String getGeoIpDetail(String ip);
 
-    String getGeoIpCountry(String ip, IpLookupV2 ipLookup);
+    String getGeoIpCountry(String ip);
 
-    String getGeoAsn(String ip, IpLookupV2 ipLookup);
+    String getGeoAsn(String ip);
 
     String radiusMatch(JSONObject jsonObject, String ip);
 

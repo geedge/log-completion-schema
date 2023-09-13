@@ -4,7 +4,7 @@ import cn.hutool.log.Log;
 import cn.hutool.log.LogFactory;
 import com.zdjizhi.common.FlowWriteConfig;
 import com.zdjizhi.tools.exception.FlowWriteException;
-import com.zdjizhi.utils.StringUtil;
+import com.geedgenetworks.utils.StringUtil;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.*;
 import org.apache.http.client.ClientProtocolException;
@@ -186,6 +186,50 @@ public class HttpClientService {
             response = httpClient.execute(httpGet);
             // 获取响应实体
             result = IOUtils.toBufferedInputStream(response.getEntity().getContent());
+            // 获取响应信息
+            EntityUtils.consume(response.getEntity());
+        } catch (ClientProtocolException e) {
+            log.error("current file: {},Protocol error:{}", url, e.getMessage());
+
+        } catch (ParseException e) {
+            log.error("current file: {}, Parser error:{}", url, e.getMessage());
+
+        } catch (IOException e) {
+            log.error("current file: {},IO error:{}", url, e.getMessage());
+
+        } finally {
+            if (null != response) {
+                try {
+                    EntityUtils.consume(response.getEntity());
+                    response.close();
+                } catch (IOException e) {
+                    log.error("Release Connection error:{}", e.getMessage());
+
+                }
+            }
+            return result;
+        }
+    }
+
+
+    public byte[] httpGetByte(String url, int socketTimeout, Header... headers) {
+        byte[] result = null;
+        // 获取客户端连接对象
+        CloseableHttpClient httpClient = getHttpClient(socketTimeout);
+        // 创建GET请求对象
+        HttpGet httpGet = new HttpGet(url);
+        if (StringUtil.isNotEmpty(headers)) {
+            for (Header h : headers) {
+                httpGet.addHeader(h);
+            }
+        }
+        CloseableHttpResponse response = null;
+
+        try {
+            // 执行请求
+            response = httpClient.execute(httpGet);
+            // 获取响应实体
+            result = IOUtils.toByteArray(response.getEntity().getContent());
             // 获取响应信息
             EntityUtils.consume(response.getEntity());
         } catch (ClientProtocolException e) {

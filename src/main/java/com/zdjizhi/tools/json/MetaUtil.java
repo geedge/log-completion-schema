@@ -4,16 +4,13 @@ import cn.hutool.log.Log;
 import cn.hutool.log.LogFactory;
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
-import com.alibaba.nacos.api.NacosFactory;
-import com.alibaba.nacos.api.PropertyKeyConst;
 import com.alibaba.nacos.api.config.ConfigService;
 import com.alibaba.nacos.api.config.listener.Listener;
 import com.alibaba.nacos.api.exception.NacosException;
-import com.alibaba.nacos.client.config.impl.LocalConfigInfoProcessor;
+import com.geedgenetworks.utils.StringUtil;
 import com.zdjizhi.common.CommonConfig;
 import com.zdjizhi.common.FlowWriteConfig;
 import com.zdjizhi.tools.connections.nacos.NacosConnection;
-import com.zdjizhi.utils.StringUtil;
 
 import java.util.*;
 import java.util.concurrent.Executor;
@@ -35,17 +32,17 @@ public class MetaUtil {
     /**
      * 获取需要删除字段的列表
      */
-    private static ArrayList<String> dropList = new ArrayList<>();
+    private static final ArrayList<String> dropList = new ArrayList<>();
 
     /**
      * 获取schema指定的有效字段及类型
      */
-    private static HashMap<String, Class> jsonFieldsMap;
+    private static HashMap<String, Class> schemaFieldsTypeMap;
 
     /**
      * 获取包含默认值的字段
      */
-    private static HashMap<String, Object> defaultFieldsMap = new HashMap<>(16);
+    private static final HashMap<String, Object> defaultFieldsMap = new HashMap<>(16);
 
     /**
      * 获取任务列表
@@ -70,7 +67,7 @@ public class MetaUtil {
                         if (CommonConfig.SCHEMA_UPDATE_ENABLED) {
                             logger.info("Reload the " + FlowWriteConfig.NACOS_SCHEMA_DATA_ID + "schema when it changes.");
                             clearCache();
-                            jsonFieldsMap = getFieldsFromSchema(configInfo);
+                            schemaFieldsTypeMap = getFieldsFromSchema(configInfo);
                             jobList = getJobListFromHttp(configInfo);
                         } else {
                             logger.info("The schema changes, but the dynamic update configuration is disabled and no operation is performed!");
@@ -80,7 +77,7 @@ public class MetaUtil {
             });
 
             if (StringUtil.isNotBlank(schema)) {
-                jsonFieldsMap = getFieldsFromSchema(schema);
+                schemaFieldsTypeMap = getFieldsFromSchema(schema);
                 jobList = getJobListFromHttp(schema);
             }
         } catch (NacosException e) {
@@ -143,16 +140,18 @@ public class MetaUtil {
     public static void typeTransform(JSONObject jsonObject) throws RuntimeException {
         dropJsonField(jsonObject);
         MetaUtil.setFieldDefault(jsonObject);
-
-        for (String schemaFieldName : jsonFieldsMap.keySet()) {
-            if (jsonObject.containsKey(schemaFieldName)) {
-                Object fieldValue = jsonObject.get(schemaFieldName);
-                if (fieldValue != null) {
-                    Class schemaFieldClass = jsonFieldsMap.get(schemaFieldName);
-                    if (fieldValue.getClass() != schemaFieldClass) {
+        for (Map.Entry<String, Object> entry : jsonObject.entrySet()) {
+            String key = entry.getKey();
+            Object value = entry.getValue();
+            if (schemaFieldsTypeMap.containsKey(key)) {
+                try {
+                    Class<?> schemaFieldClass = schemaFieldsTypeMap.get(key);
+                    if (schemaFieldClass != value.getClass()) {
                         String simpleName = schemaFieldClass.getSimpleName();
-                        DataTypeCheck.typeConverter(jsonObject, schemaFieldName, fieldValue, simpleName);
+                        DataTypeCheck.typeConverter(jsonObject, key, value, simpleName);
                     }
+                } catch (RuntimeException e) {
+                    logger.error("The {} field type conversion is abnormal! message is:", key, e);
                 }
             }
         }
@@ -200,9 +199,9 @@ public class MetaUtil {
 
         for (Object field : fields) {
             String filedStr = field.toString();
+            JSONObject fieldJson = JSONObject.parseObject(filedStr);
+            String name = fieldJson.getString("name");
             if (checkKeepField(filedStr)) {
-                JSONObject fieldJson = JSONObject.parseObject(filedStr);
-                String name = fieldJson.getString("name");
                 String type = fieldJson.getString("type");
                 if (type.contains("{")) {
                     JSONObject types = JSONObject.parseObject(type);
@@ -215,7 +214,7 @@ public class MetaUtil {
                 //组合用来生成实体类的map
                 map.put(name, getClassName(type));
             } else {
-                dropList.add(filedStr);
+                dropList.add(name);
             }
         }
         return map;
@@ -294,7 +293,7 @@ public class MetaUtil {
      */
     private static void clearCache() {
         jobList.clear();
-        jsonFieldsMap.clear();
+        schemaFieldsTypeMap.clear();
         dropList.clear();
         defaultFieldsMap.clear();
     }

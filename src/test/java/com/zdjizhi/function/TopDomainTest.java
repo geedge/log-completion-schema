@@ -1,8 +1,7 @@
 package com.zdjizhi.function;
 
 import com.google.common.net.InternetDomainName;
-import com.zdjizhi.utils.FormatUtils;
-import com.zdjizhi.utils.StringUtil;
+import com.geedgenetworks.utils.FormatUtils;
 import org.junit.Test;
 
 /**

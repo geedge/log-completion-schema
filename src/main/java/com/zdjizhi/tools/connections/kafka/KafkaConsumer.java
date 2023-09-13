@@ -2,7 +2,6 @@ package com.zdjizhi.tools.connections.kafka;
 
 import com.zdjizhi.common.FlowWriteConfig;
 import org.apache.flink.api.common.serialization.SimpleStringSchema;
-import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumer;
 
 
@@ -24,25 +23,6 @@ public class KafkaConsumer {
         CertUtils.chooseCert(FlowWriteConfig.SOURCE_KAFKA_SERVERS, properties);
 
         return properties;
-    }
-
-    /**
-     * 用户序列化kafka数据，增加 kafka Timestamp内容。
-     *
-     * @return kafka logs -> map
-     */
-    @SuppressWarnings("unchecked")
-    public static FlinkKafkaConsumer<Tuple2<String, Long>> timestampDeserializationConsumer() {
-        FlinkKafkaConsumer<Tuple2<String, Long>> kafkaConsumer = new FlinkKafkaConsumer<>(FlowWriteConfig.SOURCE_KAFKA_TOPIC,
-                new TimestampDeserializationSchema(), createConsumerConfig());
-
-        //随着checkpoint提交，将offset提交到kafka
-        kafkaConsumer.setCommitOffsetsOnCheckpoints(true);
-
-        //从消费组当前的offset开始消费
-        kafkaConsumer.setStartFromGroupOffsets();
-
-        return kafkaConsumer;
     }
 
     /**

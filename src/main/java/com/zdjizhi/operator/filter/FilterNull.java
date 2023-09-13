@@ -1,6 +1,6 @@
 package com.zdjizhi.operator.filter;
 
-import com.zdjizhi.utils.StringUtil;
+import com.geedgenetworks.utils.StringUtil;
 import org.apache.flink.api.common.functions.FilterFunction;
 
 /**

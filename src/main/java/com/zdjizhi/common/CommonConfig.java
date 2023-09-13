@@ -5,9 +5,9 @@ import cn.hutool.log.LogFactory;
 import com.alibaba.nacos.api.config.ConfigService;
 import com.alibaba.nacos.api.config.listener.Listener;
 import com.alibaba.nacos.api.exception.NacosException;
+import com.geedgenetworks.utils.StringUtil;
 import com.zdjizhi.tools.connections.nacos.NacosConnection;
 import com.zdjizhi.tools.general.ConfigurationsUtils;
-import com.zdjizhi.utils.StringUtil;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -25,7 +25,7 @@ public class CommonConfig {
 
     private static final String dataId = "olap_platform.properties";
 
-    private static Properties configProperties;
+    private static final Properties configProperties;
 
     public static String KNOWLEDGEBASE_TYPE_LIST;
     public static String KNOWLEDGEBASE_NAME_LIST;

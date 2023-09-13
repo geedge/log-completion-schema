@@ -44,14 +44,14 @@ public class FastJsonTest {
         for (Map.Entry<String, Object> entry : objectTest.entrySet()) {
             System.out.println("key:" + entry.getKey() + "————value:" + entry.getValue() + "————class: " + entry.getValue().getClass());
         }
-        System.out.println("\n输出原始日志："+objectTest.toString());
+        System.out.println("\n输出原始日志：" + objectTest.toString());
 
         Object previousMap = objectTest.get("devicetag");
         if (previousMap.getClass() != Map.class) {
             JSONObject previousObject = JSONObject.parseObject(previousMap.toString());
             objectTest.put("devicetag", previousObject);
         }
-        System.out.println("输出转换map类型后的日志："+objectTest.toString());
+        System.out.println("输出转换map类型后的日志：" + objectTest.toString());
 
         UserMap userMap = objectTest.toJavaObject(UserMap.class);
         System.out.println(JSON.toJSONString(userMap));
@@ -64,19 +64,35 @@ public class FastJsonTest {
         for (Map.Entry<String, Object> entry : arrayTest.entrySet()) {
             System.out.println("key:" + entry.getKey() + "————value:" + entry.getValue() + "————class: " + entry.getValue().getClass());
         }
-        System.out.println("\n输出原始日志："+arrayTest.toString());
+        System.out.println("\n输出原始日志：" + arrayTest.toString());
 
         Object previousList = arrayTest.get("devicetag");
         if (previousList.getClass() != List.class) {
             JSONArray previousArray = JSONArray.parseArray(previousList.toString());
             arrayTest.put("devicetag", previousArray);
         }
-        System.out.println("输出转换list类型后的日志："+arrayTest.toString());
+        System.out.println("输出转换list类型后的日志：" + arrayTest.toString());
 
         UserList userList = arrayTest.toJavaObject(UserList.class);
         System.out.println(JSON.toJSONString(userList));
 
+    }
 
+    @Test
+    public void typeTest() {
+        String message = "{\"name\":\"zhangsan\",\"age\":12,\"object\":{\"name\":\"a\",\"age\":12},\"array\":[{\"one\":1},{\"two\":2}]}";
+        JSONObject objectTest = JSONObject.parseObject(message);
+
+        for (Map.Entry<String, Object> entry : objectTest.entrySet()) {
+            String key = entry.getKey();
+            Class<?> aClass = entry.getValue().getClass();
+
+            System.out.println(key + "---------" + aClass.getSimpleName());
+        }
+        Object bbb = objectTest.get("bbb");
+        if (bbb == null){
+            System.out.println("null");
+        }
     }
 
 }

@@ -15,9 +15,9 @@ import java.util.Properties;
 public class FlowWriteConfig {
     private static final Log logger = LogFactory.get();
 
-    private static StandardPBEStringEncryptor encryptor = new StandardPBEStringEncryptor();
-    private static Properties propDefault = new Properties();
-    private static Properties propService = new Properties();
+    private static final StandardPBEStringEncryptor encryptor = new StandardPBEStringEncryptor();
+    private static final Properties propDefault = new Properties();
+    private static final Properties propService = new Properties();
 
     static {
         encryptor.setPassword("galaxy");

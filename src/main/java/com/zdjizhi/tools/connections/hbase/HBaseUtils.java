@@ -3,7 +3,7 @@ package com.zdjizhi.tools.connections.hbase;
 import cn.hutool.log.Log;
 import cn.hutool.log.LogFactory;
 import com.zdjizhi.common.FlowWriteConfig;
-import com.zdjizhi.utils.StringUtil;
+import com.geedgenetworks.utils.StringUtil;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.client.*;
@@ -192,7 +192,7 @@ public class HBaseUtils {
             if (hBaseUtils == null) {
                 getInstance();
             }
-            return radiusMap.get(clientIp);
+            return radiusMap.getOrDefault(clientIp, "");
         }
         return "";
     }

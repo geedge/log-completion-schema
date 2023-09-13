@@ -42,8 +42,8 @@ public class NewSchemaTest {
 
 
     static {
-        properties.setProperty(PropertyKeyConst.SERVER_ADDR, "192.168.44.12:8848");
-        properties.setProperty(PropertyKeyConst.NAMESPACE, "test");
+        properties.setProperty(PropertyKeyConst.SERVER_ADDR, "192.168.44.11:8848");
+        properties.setProperty(PropertyKeyConst.NAMESPACE, "f507879a-8b1b-4330-913e-83d4fcdc14bb");
         properties.setProperty(PropertyKeyConst.USERNAME, "nacos");
         properties.setProperty(PropertyKeyConst.PASSWORD, "nacos");
     }

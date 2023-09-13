@@ -1,18 +1,24 @@
 package com.zdjizhi.tools.general;
 
-import cn.hutool.core.io.file.FileReader;
 import cn.hutool.crypto.digest.DigestUtil;
 import cn.hutool.log.Log;
 import cn.hutool.log.LogFactory;
+import com.alibaba.fastjson2.*;
+import com.alibaba.nacos.api.config.ConfigService;
+import com.alibaba.nacos.api.config.listener.Listener;
+import com.alibaba.nacos.api.exception.NacosException;
+import com.geedgenetworks.utils.IpLookupV2;
+import com.geedgenetworks.utils.StringUtil;
+import com.google.common.base.Joiner;
+import com.zdjizhi.common.CommonConfig;
 import com.zdjizhi.common.FlowWriteConfig;
-import com.zdjizhi.tools.connections.hadoop.HadoopUtils;
-import com.zdjizhi.utils.IpLookupV2;
-import com.zdjizhi.utils.StringUtil;
-import org.apache.commons.io.IOUtils;
+import com.zdjizhi.common.pojo.KnowlegeBaseMeta;
+import com.zdjizhi.tools.connections.http.HttpClientService;
+import com.zdjizhi.tools.connections.nacos.NacosConnection;
 
 import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.util.Map;
+import java.util.HashMap;
+import java.util.concurrent.Executor;
 
 /**
  * @author qidaijie
@@ -27,160 +33,167 @@ public class IpLookupUtils {
     private static final String asnV4Name = "asn_v4.mmdb";
     private static final String asnV6Name = "asn_v6.mmdb";
 
+    /**
+     * ip定位库
+     */
+    private static IpLookupV2 ipLookup;
+
+    /**
+     * 定位库默认分隔符
+     */
+    private static final String LOCATION_SEPARATOR = ".";
+
+    /**
+     * 最大重试次数
+     */
+    private static final int TRY_TIMES = 5;
+
+    /**
+     * http connections
+     */
+    private static final HttpClientService httpClientService;
+
+    /**
+     * 定位库元数据缓存
+     */
+    private static final HashMap<String, KnowlegeBaseMeta> knowledgeMetaCache = new HashMap<>(16);
+
+    static {
+        JSONPath jsonPath = JSONPath.of(getFilterParameter());
+        httpClientService = new HttpClientService();
+
+        NacosConnection nacosConnection = new NacosConnection();
+        ConfigService schemaService = nacosConnection.getPublicService();
+        try {
+            String configInfo = schemaService.getConfigAndSignListener(FlowWriteConfig.NACOS_KNOWLEDGEBASE_DATA_ID, FlowWriteConfig.NACOS_PUBLIC_GROUP, FlowWriteConfig.NACOS_CONNECTION_TIMEOUT, new Listener() {
+                @Override
+                public Executor getExecutor() {
+                    return null;
+                }
+
+                @Override
+                public void receiveConfigInfo(String configInfo) {
+                    if (StringUtil.isNotBlank(configInfo)) {
+                        updateIpLookup(jsonPath, configInfo);
+                    }
+                }
+            });
+
+            if (StringUtil.isNotBlank(configInfo)) {
+                updateIpLookup(jsonPath, configInfo);
+            }
+        } catch (NacosException e) {
+            logger.error("Get Schema config from Nacos error,The exception message is :" + e.getMessage());
+        }
+    }
+
+    private static void updateIpLookup(JSONPath jsonPath, String configInfo) {
+        String extract = jsonPath.extract(JSONReader.of(configInfo)).toString();
+        if (StringUtil.isNotBlank(extract)) {
+            JSONArray jsonArray = JSON.parseArray(extract);
+            if (jsonArray.size() > 0) {
+                for (int i = 0; i < jsonArray.size(); i++) {
+                    KnowlegeBaseMeta knowlegeBaseMeta = JSONObject.parseObject(jsonArray.getString(i), KnowlegeBaseMeta.class);
+                    String fileName = Joiner.on(LOCATION_SEPARATOR).useForNull("").join(knowlegeBaseMeta.getName(), knowlegeBaseMeta.getFormat());
+                    knowledgeMetaCache.put(fileName, knowlegeBaseMeta);
+                }
+                reloadIpLookup();
+            }
+        }
+    }
 
     /**
      * 从HDFS下载文件更新IpLookup
      *
-     * @param knowledgeFileCache 广播流下发的元数据信息，包含更新内容
      * @return 更新后的IpLookup
      */
-    public static IpLookupV2 updateIpLookup(Map<String, String> knowledgeFileCache) {
+    public static void reloadIpLookup() {
+        int retryNum = 0;
         IpLookupV2.Builder builder = new IpLookupV2.Builder(false);
-//        try {
-        InputStream ipv4BuiltInFile = getUpdateFile(ipv4BuiltInName, knowledgeFileCache.get(ipv4BuiltInName));
-        if (ipv4BuiltInFile != null) {
-            builder.loadDataFileV4(ipv4BuiltInFile);
-        }
-
-        InputStream ipv6BuiltInFileFile = getUpdateFile(ipv6BuiltInName, knowledgeFileCache.get(ipv6BuiltInName));
-        if (ipv6BuiltInFileFile != null) {
-            builder.loadDataFileV6(ipv6BuiltInFileFile);
-        }
-
-        InputStream ipv4UserDefinedFile = getUpdateFile(ipv4UserDefinedName, knowledgeFileCache.get(ipv4UserDefinedName));
-        if (ipv4UserDefinedFile != null) {
-            builder.loadDataFilePrivateV4(ipv4UserDefinedFile);
-        }
-
-        InputStream ipv6UserDefinedFile = getUpdateFile(ipv6UserDefinedName, knowledgeFileCache.get(ipv6UserDefinedName));
-        if (ipv6UserDefinedFile != null) {
-            builder.loadDataFilePrivateV6(ipv6UserDefinedFile);
-        }
-
-        InputStream asnV4File = getUpdateFile(asnV4Name, knowledgeFileCache.get(asnV4Name));
-        if (asnV4File != null) {
-            builder.loadAsnDataFileV4(asnV4File);
-        }
-
-        InputStream asnV6File = getUpdateFile(asnV6Name, knowledgeFileCache.get(asnV6Name));
-        if (asnV6File != null) {
-            builder.loadAsnDataFileV6(asnV6File);
-        }
-        return builder.build();
-    }
-
-    /**
-     * 从HDFS下载文件初始化IpLookup
-     *
-     * @return 初始化的IpLookup
-     */
-    public static IpLookupV2 initIpLookup() {
-        IpLookupV2.Builder builder = new IpLookupV2.Builder(false);
-        InputStream ipv4BuiltInFile = getInitFile(ipv4BuiltInName);
-        if (ipv4BuiltInFile != null) {
-            builder.loadDataFileV4(ipv4BuiltInFile);
-        }
-
-        InputStream ipv6BuiltInFileFile = getInitFile(ipv6BuiltInName);
-        if (ipv6BuiltInFileFile != null) {
-            builder.loadDataFileV6(ipv6BuiltInFileFile);
-        }
-
-        InputStream ipv4UserDefinedFile = getInitFile(ipv4UserDefinedName);
-        if (ipv4UserDefinedFile != null) {
-            builder.loadDataFilePrivateV4(ipv4UserDefinedFile);
-        }
-
-        InputStream ipv6UserDefinedFile = getInitFile(ipv6UserDefinedName);
-        if (ipv6UserDefinedFile != null) {
-            builder.loadDataFilePrivateV6(ipv6UserDefinedFile);
-        }
-
-        InputStream asnV4File = getInitFile(asnV4Name);
-        if (asnV4File != null) {
-            builder.loadAsnDataFileV4(asnV4File);
-        }
-
-        InputStream asnV6File = getInitFile(asnV6Name);
-        if (asnV6File != null) {
-            builder.loadAsnDataFileV6(asnV6File);
-        }
-        return builder.build();
-    }
-
-    /**
-     * 下载更新文件并校验完整性
-     *
-     * @param fileName 文件名
-     * @param sha256   文件校验码
-     * @return true or false
-     */
-    private static InputStream getUpdateFile(String fileName, String sha256) {
-        InputStream inputStream = null;
-        try {
-            if (StringUtil.isNotBlank(sha256)) {
-                byte[] downloadFileBytes = downloadFile(fileName);
-                if (downloadFileBytes != null) {
-                    String downloadFileSha256Hex = DigestUtil.sha256Hex(downloadFileBytes);
-                    if (sha256.equals(downloadFileSha256Hex)) {
-                        inputStream = new ByteArrayInputStream(downloadFileBytes);
+        for (String fileName : knowledgeMetaCache.keySet()) {
+            KnowlegeBaseMeta knowlegeBaseMeta = knowledgeMetaCache.get(fileName);
+            String metaSha256 = knowlegeBaseMeta.getSha256();
+            do {
+                byte[] httpGetByte = httpClientService.httpGetByte(knowlegeBaseMeta.getPath(), FlowWriteConfig.HTTP_SOCKET_TIMEOUT);
+                if (httpGetByte.length > 0) {
+                    String downloadFileSha256 = DigestUtil.sha256Hex(httpGetByte);
+                    if (metaSha256.equals(downloadFileSha256)) {
+                        ByteArrayInputStream inputStream = new ByteArrayInputStream(httpGetByte);
+                        switch (fileName) {
+                            case ipv4BuiltInName:
+                                builder.loadDataFileV4(inputStream);
+                                break;
+                            case ipv6BuiltInName:
+                                builder.loadDataFileV6(inputStream);
+                                break;
+                            case ipv4UserDefinedName:
+                                builder.loadDataFilePrivateV4(inputStream);
+                                break;
+                            case ipv6UserDefinedName:
+                                builder.loadDataFilePrivateV6(inputStream);
+                                break;
+                            case asnV4Name:
+                                builder.loadAsnDataFileV4(inputStream);
+                                break;
+                            case asnV6Name:
+                                builder.loadAsnDataFileV6(inputStream);
+                                break;
+                            default:
+                        }
+                        retryNum = TRY_TIMES;
                     } else {
-                        logger.error("The downloaded file {} sha256 is inconsistent!", fileName);
+                        logger.error("通过HOS下载{}的sha256为:{} ,Nacos内记录为:{} ,sha256不相等 开始第{}次重试下载文件", fileName, downloadFileSha256, metaSha256, retryNum);
+                        retryNum++;
                     }
+                } else {
+                    logger.error("通过HOS下载{}的流为空 ,开始第{}次重试下载文件", fileName, retryNum);
+                    retryNum++;
                 }
-            } else {
-                byte[] downloadFileBytes = downloadFile(fileName);
-                if (downloadFileBytes != null) {
-                    inputStream = new ByteArrayInputStream(downloadFileBytes);
-                }
-            }
-        } catch (RuntimeException e) {
-            logger.error("Failed to download the {} file for update cache, Exception message:{}", fileName, e.getMessage());
-        } finally {
-            IOUtils.closeQuietly(inputStream);
+            } while (retryNum < TRY_TIMES);
         }
-        return inputStream;
+        ipLookup = builder.build();
     }
 
     /**
-     * 下载文件（初始化）
+     * 根据配置组合生成知识库元数据过滤参数
      *
-     * @param fileName 文件名
-     * @return 文件io流
+     * @return 过滤参数
      */
-    private static InputStream getInitFile(String fileName) {
-        InputStream inputStream = null;
-        try {
-            byte[] fileBytes = downloadFile(fileName);
-            if (fileBytes != null) {
-                inputStream = new ByteArrayInputStream(fileBytes);
+    private static String getFilterParameter() {
+        String[] typeList = CommonConfig.KNOWLEDGEBASE_TYPE_LIST.split(",");
+        String[] nameList = CommonConfig.KNOWLEDGEBASE_NAME_LIST.split(",");
+        String expr = "[?(@.version=='latest')]";
+
+        if (typeList.length > 1) {
+            StringBuilder typeBuilder = new StringBuilder();
+            typeBuilder.append("[?(@.type in (");
+            for (int i = 0; i < typeList.length; i++) {
+                if (i == typeList.length - 1) {
+                    typeBuilder.append("'").append(typeList[i]).append("'))]");
+                } else {
+                    typeBuilder.append("'").append(typeList[i]).append("',");
+                }
             }
-        } catch (RuntimeException e) {
-            logger.error("Failed to download the {} file for initialization cache, The exception message is:{}", fileName, e.getMessage());
-            e.printStackTrace();
-        } finally {
-            IOUtils.closeQuietly(inputStream);
+            expr = expr + typeBuilder;
         }
-        return inputStream;
+
+        if (nameList.length > 1) {
+            StringBuilder nameBuilder = new StringBuilder();
+            nameBuilder.append("[?(@.name in (");
+            for (int i = 0; i < nameList.length; i++) {
+                if (i == nameList.length - 1) {
+                    nameBuilder.append("'").append(nameList[i]).append("'))]");
+                } else {
+                    nameBuilder.append("'").append(nameList[i]).append("',");
+                }
+            }
+            expr = expr + nameBuilder;
+        }
+
+        return expr;
     }
 
-    /**
-     * 根据不同文件系统获取定位库io流
-     *
-     * @param fileName 文件名
-     * @return 文件io流
-     */
-    private static byte[] downloadFile(String fileName) {
-        byte[] fileBytes = null;
-        try {
-            String filePath = FlowWriteConfig.KNOWLEDGEBASE_FILE_STORAGE_PATH + fileName;
-            fileBytes = FlowWriteConfig.FILE_SYSTEM_TYPE.equals(FlowWriteConfig.KNOWLEDGEBASE_FILE_STORAGE_TYPE) ?
-                    HadoopUtils.downloadFileByBytes(filePath) : new FileReader(filePath).readBytes();
-        } catch (RuntimeException e) {
-            logger.error("Failed to download file {} from {}, The exception message is:{}", FlowWriteConfig.KNOWLEDGEBASE_FILE_STORAGE_TYPE, fileName, e.getMessage());
-            e.printStackTrace();
-        }
-        return fileBytes;
+    public static IpLookupV2 getIpLookup() {
+        return ipLookup;
     }
-
 }

@@ -3,11 +3,9 @@ package com.zdjizhi.function;
 import cn.hutool.core.codec.Base64;
 import cn.hutool.log.Log;
 import cn.hutool.log.LogFactory;
-import com.zdjizhi.utils.StringUtil;
 import org.junit.Test;
 
 import java.io.UnsupportedEncodingException;
-import java.util.Arrays;
 
 /**
  * @author qidaijie

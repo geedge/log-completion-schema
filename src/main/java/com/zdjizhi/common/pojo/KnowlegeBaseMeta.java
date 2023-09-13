@@ -7,16 +7,26 @@ package com.zdjizhi.common.pojo;
  * @date 2023/5/2011:18
  */
 public class KnowlegeBaseMeta {
+    private String id;
     private String name;
     private String sha256;
     private String format;
     private String path;
 
-    public KnowlegeBaseMeta(String name, String sha256, String format, String path) {
+    public KnowlegeBaseMeta(String id, String name, String sha256, String format, String path) {
+        this.id = id;
         this.name = name;
         this.sha256 = sha256;
         this.format = format;
         this.path = path;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 
     public String getName() {
@@ -54,10 +64,12 @@ public class KnowlegeBaseMeta {
     @Override
     public String toString() {
         return "KnowlegeBaseMeta{" +
-                "name='" + name + '\'' +
+                "id='" + id + '\'' +
+                ", name='" + name + '\'' +
                 ", sha256='" + sha256 + '\'' +
                 ", format='" + format + '\'' +
                 ", path='" + path + '\'' +
                 '}';
     }
 }
+

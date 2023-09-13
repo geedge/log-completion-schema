@@ -3,7 +3,6 @@ package com.zdjizhi.tools.transform;
 import com.alibaba.fastjson2.JSONObject;
 import com.zdjizhi.tools.json.MetaUtil;
 import com.zdjizhi.tools.transform.impl.TransformFunctionImpl;
-import com.zdjizhi.utils.IpLookupV2;
 
 
 /**
@@ -14,7 +13,7 @@ import com.zdjizhi.utils.IpLookupV2;
 public class TransForm {
     private static TransformFunctionImpl transformFunction = new TransformFunctionImpl();
 
-    public static void transformLog(JSONObject jsonObject, IpLookupV2 ipLookup) {
+    public static void transformLog(JSONObject jsonObject) {
         for (String[] strings : MetaUtil.getJobList()) {
             //该日志字段的值
             Object logValue = jsonObject.get(strings[0]);
@@ -28,7 +27,7 @@ public class TransForm {
             //结果值映射到的日志字段原始value
             Object appendToValue = jsonObject.get(appendToKey);
 
-            functionSet(function, jsonObject, appendToKey, appendToValue, logValue, param, ipLookup);
+            functionSet(function, jsonObject, appendToKey, appendToValue, logValue, param);
         }
     }
 
@@ -43,7 +42,7 @@ public class TransForm {
      * @param logValue      用到的参数的值
      * @param param         额外的参数的值
      */
-    private static void functionSet(String function, JSONObject jsonObject, String appendToKey, Object appendToValue, Object logValue, String param, IpLookupV2 ipLookup) {
+    private static void functionSet(String function, JSONObject jsonObject, String appendToKey, Object appendToValue, Object logValue, String param) {
 
         switch (function) {
             case "current_timestamp":
@@ -56,17 +55,17 @@ public class TransForm {
                 break;
             case "geo_ip_detail":
                 if (logValue != null && appendToValue == null) {
-                    jsonObject.put(appendToKey, transformFunction.getGeoIpDetail(logValue.toString(), ipLookup));
+                    jsonObject.put(appendToKey, transformFunction.getGeoIpDetail(logValue.toString()));
                 }
                 break;
             case "geo_asn":
                 if (logValue != null && appendToValue == null) {
-                    jsonObject.put(appendToKey, transformFunction.getGeoAsn(logValue.toString(), ipLookup));
+                    jsonObject.put(appendToKey, transformFunction.getGeoAsn(logValue.toString()));
                 }
                 break;
             case "geo_ip_country":
                 if (logValue != null && appendToValue == null) {
-                    jsonObject.put(appendToKey, transformFunction.getGeoIpCountry(logValue.toString(), ipLookup));
+                    jsonObject.put(appendToKey, transformFunction.getGeoIpCountry(logValue.toString()));
                 }
                 break;
             case "flattenSpec":

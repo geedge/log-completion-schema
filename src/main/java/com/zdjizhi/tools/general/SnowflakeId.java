@@ -25,7 +25,7 @@ public class SnowflakeId {
     /**
      * 开始时间截 (2020-11-14 00:00:00) max 17years
      */
-    private final long twepoch = 1605283200000L;
+    private final long twepoch = 1693274481297L;
 
     /**
      * 机器id所占的位数

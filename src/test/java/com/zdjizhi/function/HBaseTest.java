@@ -3,7 +3,7 @@ package com.zdjizhi.function;
 import cn.hutool.log.Log;
 import cn.hutool.log.LogFactory;
 import com.zdjizhi.common.FlowWriteConfig;
-import com.zdjizhi.utils.StringUtil;
+import com.geedgenetworks.utils.StringUtil;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.TableName;
@@ -33,7 +33,7 @@ public class HBaseTest {
         // 管理Hbase的配置信息
         Configuration configuration = HBaseConfiguration.create();
         // 设置zookeeper节点
-        configuration.set("hbase.zookeeper.quorum", "192.168.44.111:2181");
+        configuration.set("hbase.zookeeper.quorum", "192.168.44.12:2181");
         configuration.set("hbase.client.retries.number", "1");
         configuration.set("hbase.client.pause", "50");
         configuration.set("hbase.rpc.timeout", "3000");
@@ -70,7 +70,7 @@ public class HBaseTest {
         // 管理Hbase的配置信息
         Configuration configuration = HBaseConfiguration.create();
         // 设置zookeeper节点
-        configuration.set("hbase.zookeeper.quorum", "192.168.44.11:2181");
+        configuration.set("hbase.zookeeper.quorum", "192.168.44.12:2181");
         configuration.set("hbase.client.retries.number", "1");
         configuration.set("hbase.client.pause", "50");
         configuration.set("hbase.rpc.timeout", "3000");
